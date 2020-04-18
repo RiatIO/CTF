@@ -1,0 +1,4 @@
+name: CTF
+version: 1
+author: RIAT
+main: io.riat.CTF.CTF
