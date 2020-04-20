@@ -50,7 +50,7 @@ public class CTF extends JavaPlugin implements Listener {
         getLogger().info("Hello World 3!");
 
         // Register Events
-        getServer().getPluginManager().registerEvents(new PlayerJoin(), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection), this);
         getServer().getPluginManager().registerEvents(new BlockBreak(), this);
 
         // Register Commands

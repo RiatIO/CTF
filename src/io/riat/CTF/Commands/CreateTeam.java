@@ -52,27 +52,49 @@ public class CreateTeam implements CommandExecutor {
                 return false;
             }
 
+
             if (!createTeam(player, teamColor)) {
                 player.sendMessage("[CTF] Something went wrong while parsing the data, beep boop.");
                 return false;
             }
 
-            player.sendMessage(String.format("[CTF] Team (%s) has been created! Do /teaminv [PLAYER] to create a team", teamColor));
+            player.sendMessage(String.format(
+                    "[CTF] Team (%s) has been created! Do /teaminvite [PLAYER] to invite other players",
+                    teamColor
+                )
+            );
             player.getInventory().addItem(new ItemStack(team.get(teamColor)));
         }
 
         return true;
     }
 
+    /**
+     * Check if user is in a team
+     *
+     * @param player current player instance.
+     * @return in the team or not.
+     */
     private boolean isPlayerInTeam(Player player) {
-        // Check if user already has a team
         try {
             PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
             statement.setString(1, player.getUniqueId().toString());
-
             ResultSet userResult = statement.executeQuery();
 
-            return userResult.next();
+            if (userResult.next()) {
+                Integer team = (Integer) userResult.getObject("team");
+
+                // If the user is not in a team (is null), then return false
+                if (team == null) {
+                    return false;
+                }
+
+                // User is already in a team!
+                return true;
+            }
+
+            // This should never happen, because users should be inserted into the database on join.
+            return false;
 
         } catch (SQLException e) {
             e.getStackTrace();
@@ -98,12 +120,11 @@ public class CreateTeam implements CommandExecutor {
 
     private boolean createTeam(Player player, String color) {
         try {
-            // Insert into database
+            // Insert new team into table, and return the primary key
             PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO teams (leader, color) VALUES (?, ?)",
                     Statement.RETURN_GENERATED_KEYS
             );
-
             statement.setString(1, player.getUniqueId().toString());
             statement.setString(2, color);
 
@@ -115,12 +136,13 @@ public class CreateTeam implements CommandExecutor {
 
                 int teamPK = rs.getInt(1);
 
+                // Update the user team field, with the primary key of the team.
                 PreparedStatement insertUserStatement = connection.prepareStatement(
-                        "INSERT INTO users (uuid, name, team) VALUES (?, ?, ?)"
+                        "UPDATE users SET team = ? WHERE uuid = ?"
                 );
-                insertUserStatement.setString(1, player.getUniqueId().toString());
-                insertUserStatement.setString(2, player.getDisplayName());
-                insertUserStatement.setInt(3, teamPK);
+
+                insertUserStatement.setInt(1, teamPK);
+                insertUserStatement.setString(2, player.getUniqueId().toString());
 
                 int usersResult = insertUserStatement.executeUpdate();
 
