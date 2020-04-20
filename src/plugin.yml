@@ -2,3 +2,8 @@ name: CTF
 version: 1
 author: RIAT
 main: io.riat.CTF.CTF
+api-version: 1.13
+commands:
+  createteam:
+    description: Create your team
+    usage: /createteam <WHITE - ORANGE - MAGENTA - YELLOW - LIME - PINK - GRAY - CYAN - PURPLE - BLUE - BROWN - GREEN - RED - BLACK>

@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 
-artifact="${PWD}/out/artifacts/CTF_jar/CTF.jar"
-plugin="${PWD}/server/plugins"
+plugin="${PWD}/out/artifacts/CTF_jar/CTF.jar"
+server="${PWD}/server/plugins"
 
-if [ -e "$artifact" ]
+if [ -e "$plugin" ]
 then
-  mv "$artifact" "$plugin"
+  mv "$plugin" "$server"
 fi
