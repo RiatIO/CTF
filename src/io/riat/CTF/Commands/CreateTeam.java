@@ -1,24 +1,27 @@
 package io.riat.CTF.Commands;
 
 import io.riat.CTF.Utils;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class CreateTeam implements CommandExecutor {
 
     private Connection connection;
+    private Plugin plugin;
 
-    public CreateTeam(Connection connection) {
+    public CreateTeam(Connection connection, Plugin plugin) {
         this.connection = connection;
+        this.plugin = plugin;
     }
 
     @Override
@@ -39,68 +42,125 @@ public class CreateTeam implements CommandExecutor {
                 return false;
             }
 
-            try {
-
-                // Check if user already has a team
-                PreparedStatement checkUserStmt = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
-                checkUserStmt.setString(1, player.getUniqueId().toString());
-                ResultSet userResult = checkUserStmt.executeQuery();
-
-                if (userResult.next()) {
-                    player.sendMessage("[CTF] You already have/own a team! Do /leaveteam if you wish to abandon your fellow comrades");
-
-                    return true;
-                }
-
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM teams WHERE color = ?");
-                statement.setString(1, teamColor);
-                ResultSet result = statement.executeQuery();
-
-                if (!result.next()) {
-                    System.out.println("Empty");
-
-                    // Insert into database
-                    PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO teams (leader, color) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS);
-                    insertStatement.setString(1, player.getUniqueId().toString());
-                    insertStatement.setString(2, teamColor);
-
-                    int insertRes = insertStatement.executeUpdate();
-
-                    if (insertRes > 0) {
-                        player.sendMessage("[CTF] Team has been created! Do /teaminv [PLAYER] to create a team");
-                        ResultSet rs = insertStatement.getGeneratedKeys();
-                        rs.next();
-
-                        int teamPK = rs.getInt(1);
-
-                        PreparedStatement insertUserStatement = connection.prepareStatement("INSERT INTO users (uuid, name, team) VALUES (?, ?, ?)");
-                        insertUserStatement.setString(1, player.getUniqueId().toString());
-                        insertUserStatement.setString(2, player.getDisplayName());
-                        insertUserStatement.setInt(3, teamPK);
-
-                        int insertUserRes = insertUserStatement.executeUpdate();
-
-                    } else {
-                        player.sendMessage("[CTF] Something went wrong while parsing the data, beep boop.");
-                    }
-
-                } else {
-                    System.out.println("Not empty");
-                    player.sendMessage("[CTF] Team is already selected, try again!");
-                    return false;
-                }
-
-            } catch (SQLException e) {
-                e.printStackTrace();
+            if (isPlayerInTeam(player)) {
+                player.sendMessage("[CTF] You're already in a team! Leave by typing /leaveteam");
+                return true;
             }
 
-            player.sendMessage("HEI " + team.get(teamColor));
+            if (isTeamColorUsed(teamColor)) {
+                player.sendMessage("[CTF] Team is already selected, try again!");
+                return false;
+            }
 
+            if (!createTeam(player, teamColor)) {
+                player.sendMessage("[CTF] Something went wrong while parsing the data, beep boop.");
+                return false;
+            }
+
+            player.sendMessage(String.format("[CTF] Team (%s) has been created! Do /teaminv [PLAYER] to create a team", teamColor));
             player.getInventory().addItem(new ItemStack(team.get(teamColor)));
-
-            // Check if team is registered
         }
 
         return true;
     }
+
+    private boolean isPlayerInTeam(Player player) {
+        // Check if user already has a team
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
+            statement.setString(1, player.getUniqueId().toString());
+
+            ResultSet userResult = statement.executeQuery();
+
+            return userResult.next();
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return false;
+    }
+
+    private boolean isTeamColorUsed(String color) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT * FROM teams WHERE color = ?");
+            statement.setString(1, color);
+            ResultSet result = statement.executeQuery();
+
+            return result.next();
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return true;
+    }
+
+    private boolean createTeam(Player player, String color) {
+        try {
+            // Insert into database
+            PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO teams (leader, color) VALUES (?, ?)",
+                    Statement.RETURN_GENERATED_KEYS
+            );
+
+            statement.setString(1, player.getUniqueId().toString());
+            statement.setString(2, color);
+
+            int teamsResult = statement.executeUpdate();
+
+            if (teamsResult > 0) {
+                ResultSet rs = statement.getGeneratedKeys();
+                rs.next();
+
+                int teamPK = rs.getInt(1);
+
+                PreparedStatement insertUserStatement = connection.prepareStatement(
+                        "INSERT INTO users (uuid, name, team) VALUES (?, ?, ?)"
+                );
+                insertUserStatement.setString(1, player.getUniqueId().toString());
+                insertUserStatement.setString(2, player.getDisplayName());
+                insertUserStatement.setInt(3, teamPK);
+
+                int usersResult = insertUserStatement.executeUpdate();
+
+                if (usersResult > 0) {
+                    return true;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+        return false;
+    }
+
+
+    private void asyncIsPlayerInTeam(Player player, Callback<Boolean> callback) {
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            final Boolean[] res = new Boolean[1];
+
+            try {
+                PreparedStatement checkUserStmt = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
+                checkUserStmt.setString(1, player.getUniqueId().toString());
+                ResultSet userResult = checkUserStmt.executeQuery();
+
+                res[0] = userResult.next();
+            } catch (SQLException e) {
+                callback.onFailure(e);
+            }
+
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                callback.onSuccess(res[0]);
+            });
+        });
+    }
+
+    public interface Callback<T> {
+        boolean onSuccess(T done);
+        void onFailure(Throwable cause);
+    }
+
+
 }

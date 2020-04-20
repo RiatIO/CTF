@@ -1,6 +1,8 @@
 package io.riat.CTF;
 
 import io.riat.CTF.Commands.CreateTeam;
+import io.riat.CTF.Commands.InviteTeam;
+import io.riat.CTF.Commands.LeaveTeam;
 import io.riat.CTF.Events.BlockBreak;
 import io.riat.CTF.Events.PlayerJoin;
 import org.bukkit.Location;
@@ -52,7 +54,9 @@ public class CTF extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new BlockBreak(), this);
 
         // Register Commands
-        getCommand("createteam").setExecutor(new CreateTeam(connection));
+        getCommand("createteam").setExecutor(new CreateTeam(connection, this));
+        getCommand("inviteteam").setExecutor(new InviteTeam(connection));
+        getCommand("leaveteam").setExecutor(new LeaveTeam(connection));
     }
 
     @Override
