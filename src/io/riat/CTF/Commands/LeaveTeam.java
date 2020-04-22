@@ -32,7 +32,6 @@ public class LeaveTeam implements CommandExecutor {
             }
 
             leaveTeam(team, player);
-
         }
 
 
@@ -79,12 +78,11 @@ public class LeaveTeam implements CommandExecutor {
                     );
                     playerStatement.setInt(1, team);
                     ResultSet playerResult = playerStatement.executeQuery();
-                    System.out.println("team " + team);
-                    System.out.println("player res " + playerResult.getFetchSize());
 
                     while (playerResult.next()) {
                         String playerUUID = playerResult.getString("uuid");
                         String playerName = playerResult.getString("name");
+
                         if (!removePlayerFromTeam(playerUUID)) {
                             player.sendMessage("[CTF] Player " + playerName + " had troubles leaving, wops?");
                         }
@@ -123,7 +121,6 @@ public class LeaveTeam implements CommandExecutor {
             playerStatement.setString(2, uuid);
 
             if (playerStatement.executeUpdate() > 0) {
-
                 return true;
             }
 
