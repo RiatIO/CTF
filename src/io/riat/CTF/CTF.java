@@ -31,16 +31,8 @@ public class CTF extends JavaPlugin implements Listener {
 
         // Database
         Database db = new Database("localhost", 3306 ,"ctf_db", "deep", "test");
-
         try {
             connection = db.openConnection();
-            Statement statement = connection.createStatement();
-
-            ResultSet result = statement.executeQuery("SELECT * FROM users");
-
-            while (result.next()) {
-                System.out.println("RES " + result.getString("id"));
-            }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
@@ -51,7 +43,7 @@ public class CTF extends JavaPlugin implements Listener {
 
         // Register Events
         getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection), this);
-        getServer().getPluginManager().registerEvents(new BlockBreak(), this);
+        getServer().getPluginManager().registerEvents(new BlockBreak(connection), this);
 
         // Register Commands
         getCommand("createteam").setExecutor(new CreateTeam(connection, this));
