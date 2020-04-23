@@ -1,17 +1,24 @@
 package io.riat.CTF.Events;
 
 import io.riat.CTF.Commands.CreateTeam;
+import io.riat.CTF.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 
 public class PlayerJoin implements Listener {
 
@@ -26,6 +33,8 @@ public class PlayerJoin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        createScoreboard(player);
 
         asyncUserStatus(player);
     }
@@ -62,9 +71,76 @@ public class PlayerJoin implements Listener {
         });
     }
 
-    public interface Callback<T> {
-        void onSuccess(T done);
-        void onFailure(Throwable cause);
+    public void createScoreboard(Player player) {
+        HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
+
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
+
+        Objective objective = scoreboard.registerNewObjective("scoreboard", "dummy", "test");
+
+        objective.setDisplayName(ChatColor.GOLD + "[CTF] Team Scoreboard");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+
+        getRegisteredTeamsAndScore(objective);
+        /*
+        HashMap<String, Score> test = new HashMap<String, Score>();
+        test.put("WHITE", objective.getScore(colors.get("WHITE") + "WHITE"));
+
+
+        Score WHITE = objective.getScore(colors.get("WHITE") + "WHITE");
+        Score ORANGE = objective.getScore(colors.get("ORANGE") + "ORANGE");
+        Score MAGENTA = objective.getScore(colors.get("MAGENTA") + "MAGENTA");
+        Score YELLOW = objective.getScore(colors.get("YELLOW") + "YELLOW");
+        Score LIME = objective.getScore(colors.get("LIME") + "LIME");
+        Score PINK = objective.getScore(colors.get("PINK") + "PINK");
+        Score GRAY = objective.getScore(colors.get("GRAY") + "GRAY");
+        Score CYAN = objective.getScore(colors.get("CYAN") + "CYAN");
+        Score PURPLE = objective.getScore(colors.get("PURPLE") + "PURPLE");
+        Score BLUE = objective.getScore(colors.get("BLUE") + "BLUE");
+        Score BROWN = objective.getScore(colors.get("BROWN") + "BROWN");
+        Score GREEN = objective.getScore(colors.get("GREEN") + "GREEN");
+        Score RED = objective.getScore(colors.get("RED") + "RED");
+        Score BLACK = objective.getScore(colors.get("BLACK") + "BLACK");
+
+        test.get("WHITE").setScore(0);
+        //WHITE.setScore(0);
+        ORANGE.setScore(0);
+        MAGENTA.setScore(0);
+        YELLOW.setScore(0);
+        LIME.setScore(0);
+        PINK.setScore(0);
+        GRAY.setScore(0);
+        CYAN.setScore(0);
+        PURPLE.setScore(0);
+        BROWN.setScore(0);
+        RED.setScore(0);
+        BLUE.setScore(0);
+        BLACK.setScore(1);
+        GREEN.setScore(1);
+        */
+        player.setPlayerListName(String.format(" %s %s[%s]", player.getDisplayName(), ChatColor.RED, "RED"));
+        player.setScoreboard(scoreboard);
+    }
+
+    public void getRegisteredTeamsAndScore(Objective objective) {
+        HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM teams"
+            );
+            ResultSet teamsResult = statement.executeQuery();
+
+            //HashMap<String, Score> teams = new HashMap<>();
+
+            while (teamsResult.next()) {
+                String color = teamsResult.getString("color");
+                int score = teamsResult.getInt("score");
+                objective.getScore(colors.get(color) + color).setScore(score);
+            }
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
     }
 
 }

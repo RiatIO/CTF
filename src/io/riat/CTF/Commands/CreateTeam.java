@@ -27,7 +27,7 @@ public class CreateTeam implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
 
-        HashMap<String, Material> team = Utils.getTeamMap();
+        HashMap<String, Material> team = Utils.getTeamMaterialMap();
 
         if (commandSender instanceof Player) {
             Player player = (Player) commandSender;
@@ -122,11 +122,12 @@ public class CreateTeam implements CommandExecutor {
         try {
             // Insert new team into table, and return the primary key
             PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO teams (leader, color) VALUES (?, ?)",
+                    "INSERT INTO teams (leader, color, score) VALUES (?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS
             );
             statement.setString(1, player.getUniqueId().toString());
             statement.setString(2, color);
+            statement.setInt(3, 0);
 
             int teamsResult = statement.executeUpdate();
 
