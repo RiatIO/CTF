@@ -22,6 +22,8 @@ import java.util.HashMap;
 
 public class PlayerJoin implements Listener {
 
+    HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
+
     private Connection connection;
     private Plugin plugin;
 
@@ -118,12 +120,12 @@ public class PlayerJoin implements Listener {
         BLACK.setScore(1);
         GREEN.setScore(1);
         */
-        player.setPlayerListName(String.format(" %s %s[%s]", player.getDisplayName(), ChatColor.RED, "RED"));
+
+        setPlayerTeamName(player);
         player.setScoreboard(scoreboard);
     }
 
     public void getRegisteredTeamsAndScore(Objective objective) {
-        HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
 
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -141,6 +143,35 @@ public class PlayerJoin implements Listener {
         } catch (SQLException e) {
             e.getStackTrace();
         }
+    }
+
+    public void setPlayerTeamName(Player player) {
+
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT t.color FROM teams t, users u WHERE u.uuid = ? AND u.team = t.id"
+            );
+            statement.setString(1, player.getUniqueId().toString());
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                String color = result.getString(1);
+
+                player.setPlayerListName(
+                        String.format(" %s %s[%s]", player.getDisplayName(), colors.get(color), color)
+                );
+            } else {
+                player.setPlayerListName(
+                        String.format(" %s %s[%s]", player.getDisplayName(), ChatColor.BOLD, "NO TEAM")
+                );
+            }
+
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
     }
 
 }

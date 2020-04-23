@@ -64,6 +64,10 @@ public class CreateTeam implements CommandExecutor {
                 )
             );
             player.getInventory().addItem(new ItemStack(team.get(teamColor)));
+
+            // Update the scoreboard for all of the connected users.
+
+
         }
 
         return true;
