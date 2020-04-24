@@ -58,16 +58,21 @@ public class BlockBreak implements Listener {
                     w.dropItemNaturally(e.getBlock().getLocation().add(0.5,  1, 0.5), it);
                 }
             } else {
+
+                // Check if
+
                 // If the banner is not the same team color as the player, blow the base
                 player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
                 blowTheBase(w, e);
+
+
 
                 updateTeamScore(playerTeamColor);
             }
         }
 
         // Prevent people from destroying the area restriction.
-        if (b.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+        if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {
             e.setCancelled(true);
             player.sendMessage("[CTF] You can't break the dome, dude.");
         }
