@@ -58,7 +58,7 @@ public class BlockPlace implements Listener {
 
         }
 
-        if (b.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+        if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {
             e.setCancelled(true);
             player.sendMessage("[CTF] Trying to be smart, ey? That's not allowed.");
         }

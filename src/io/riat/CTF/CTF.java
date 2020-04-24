@@ -3,9 +3,7 @@ package io.riat.CTF;
 import io.riat.CTF.Commands.CreateTeam;
 import io.riat.CTF.Commands.InviteTeam;
 import io.riat.CTF.Commands.LeaveTeam;
-import io.riat.CTF.Events.BlockBreak;
-import io.riat.CTF.Events.BlockPlace;
-import io.riat.CTF.Events.PlayerJoin;
+import io.riat.CTF.Events.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -49,6 +47,8 @@ public class CTF extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new BlockBreak(connection, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new BlockPlace(this), this);
+        getServer().getPluginManager().registerEvents(new CraftItem(), this);
+        getServer().getPluginManager().registerEvents(new EntityExplode(), this);
 
         // Register Commands
         getCommand("createteam").setExecutor(new CreateTeam(connection, this, scoreboardManager));
@@ -64,14 +64,10 @@ public class CTF extends JavaPlugin implements Listener {
     public void generateMapZone() {
         World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
+
         int radius = 500;
 
         spawn.subtract(radius / 2, 0, radius / 2);
-
-        //int x = spawn.getBlockX();
-        //int y = spawn.getBlockY();
-        //int z = spawn.getBlockZ();
-
 
         for (int x = 0; x < radius; x++) {
             for (int y = 0; y < 256; y++) {
@@ -96,15 +92,5 @@ public class CTF extends JavaPlugin implements Listener {
                 world.getBlockAt(spawn.getBlockX() + radius - 1, y, spawn.getBlockZ() + z).setType(Material.WHITE_STAINED_GLASS_PANE);
             }
         }
-
-        /*
-        for (int z = 0; z < 10; z++) {
-            world.getBlockAt(spawn.getBlockX(), spawn.getBlockY(), spawn.getBlockZ() + z).setType(Material.GRAY_STAINED_GLASS_PANE);
-            for (int y = 0; y <= 10; y++) {
-                world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() + 1, spawn.getBlockZ() + z).setType(Material.GRAY_STAINED_GLASS_PANE);
-                world.getBlockAt(spawn.getBlockX(), spawn.getBlockY() + 2, spawn.getBlockZ() + z).setType(Material.GRAY_STAINED_GLASS_PANE);
-            }
-        }*/
     }
-
 }

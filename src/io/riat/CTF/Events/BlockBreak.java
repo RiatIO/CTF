@@ -58,14 +58,9 @@ public class BlockBreak implements Listener {
                     w.dropItemNaturally(e.getBlock().getLocation().add(0.5,  1, 0.5), it);
                 }
             } else {
-
-                // Check if
-
                 // If the banner is not the same team color as the player, blow the base
                 player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
                 blowTheBase(w, e);
-
-
 
                 updateTeamScore(playerTeamColor);
             }
