@@ -1,6 +1,7 @@
 package io.riat.CTF.Events;
 
 import com.mysql.jdbc.Util;
+import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -22,11 +23,14 @@ import java.util.List;
 
 public class BlockBreak implements Listener {
 
-    HashMap<String, Material> banners = Utils.getTeamMaterialMap();
+    private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
     private Connection connection;
 
-    public BlockBreak(Connection connection) {
+    private ScoreboardManager scoreboardManager;
+
+    public BlockBreak(Connection connection, ScoreboardManager scoreboardManager) {
         this.connection = connection;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @EventHandler
@@ -106,6 +110,7 @@ public class BlockBreak implements Listener {
 
             if (statement.executeUpdate() > 0) {
                 System.out.println("UPDATED SCORE");
+                scoreboardManager.updateScore(color);
             }
 
         } catch (SQLException e) {

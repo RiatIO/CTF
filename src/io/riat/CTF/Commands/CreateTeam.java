@@ -1,7 +1,9 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -10,18 +12,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Scoreboard;
 
 import java.sql.*;
 import java.util.HashMap;
 
 public class CreateTeam implements CommandExecutor {
 
+    private HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
+
     private Connection connection;
     private Plugin plugin;
+    private ScoreboardManager scoreboardManager;
 
-    public CreateTeam(Connection connection, Plugin plugin) {
+    public CreateTeam(Connection connection, Plugin plugin, ScoreboardManager scoreboardManager) {
         this.connection = connection;
         this.plugin = plugin;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @Override
@@ -66,8 +73,7 @@ public class CreateTeam implements CommandExecutor {
             player.getInventory().addItem(new ItemStack(team.get(teamColor)));
 
             // Update the scoreboard for all of the connected users.
-
-
+            scoreboardManager.addTeam(player, teamColor);
         }
 
         return true;
@@ -161,33 +167,4 @@ public class CreateTeam implements CommandExecutor {
         }
         return false;
     }
-
-
-    private void asyncIsPlayerInTeam(Player player, Callback<Boolean> callback) {
-
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            final Boolean[] res = new Boolean[1];
-
-            try {
-                PreparedStatement checkUserStmt = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
-                checkUserStmt.setString(1, player.getUniqueId().toString());
-                ResultSet userResult = checkUserStmt.executeQuery();
-
-                res[0] = userResult.next();
-            } catch (SQLException e) {
-                callback.onFailure(e);
-            }
-
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                callback.onSuccess(res[0]);
-            });
-        });
-    }
-
-    public interface Callback<T> {
-        boolean onSuccess(T done);
-        void onFailure(Throwable cause);
-    }
-
-
 }

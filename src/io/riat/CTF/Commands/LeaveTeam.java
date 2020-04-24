@@ -1,5 +1,6 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.ScoreboardManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,9 +14,11 @@ import java.sql.SQLException;
 public class LeaveTeam implements CommandExecutor {
 
     private Connection connection;
+    private ScoreboardManager scoreboardManager;
 
-    public LeaveTeam(Connection connection) {
+    public LeaveTeam(Connection connection, ScoreboardManager scoreboardManager) {
         this.connection = connection;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @Override
@@ -83,6 +86,8 @@ public class LeaveTeam implements CommandExecutor {
                         String playerUUID = playerResult.getString("uuid");
                         String playerName = playerResult.getString("name");
 
+                        scoreboardManager.updatePlayerListName(playerName, "NO TEAM");
+
                         if (!removePlayerFromTeam(playerUUID)) {
                             player.sendMessage("[CTF] Player " + playerName + " had troubles leaving, wops?");
                         }
@@ -98,11 +103,14 @@ public class LeaveTeam implements CommandExecutor {
                         player.sendMessage(
                                 "[CTF] You took down the whole team " + color + " and its players, hope you're happy"
                         );
+
+                        scoreboardManager.removeTeam(color);
                     }
                 } else {
                     // if not leader, just leave the team.
                     if (removePlayerFromTeam(player.getUniqueId().toString())) {
                         player.sendMessage("[CTF] You have left the " + color + " team, farewell!");
+                        scoreboardManager.updatePlayerListName(player, "NO TEAM");
                     }
                 }
             }

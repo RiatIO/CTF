@@ -41,14 +41,17 @@ public class CTF extends JavaPlugin implements Listener {
 
         getLogger().info("Hello World 3!");
 
+        // Register Scoreboard manager
+        ScoreboardManager scoreboardManager = new ScoreboardManager(connection);
+
         // Register Events
-        getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection), this);
-        getServer().getPluginManager().registerEvents(new BlockBreak(connection), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection, scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new BlockBreak(connection, scoreboardManager), this);
 
         // Register Commands
-        getCommand("createteam").setExecutor(new CreateTeam(connection, this));
-        getCommand("inviteteam").setExecutor(new InviteTeam(connection));
-        getCommand("leaveteam").setExecutor(new LeaveTeam(connection));
+        getCommand("createteam").setExecutor(new CreateTeam(connection, this, scoreboardManager));
+        getCommand("inviteteam").setExecutor(new InviteTeam(connection, scoreboardManager));
+        getCommand("leaveteam").setExecutor(new LeaveTeam(connection, scoreboardManager));
     }
 
     @Override

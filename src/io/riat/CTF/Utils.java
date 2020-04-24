@@ -47,6 +47,8 @@ public class Utils {
         colors.put("RED", ChatColor.DARK_RED);
         colors.put("BLACK", ChatColor.BLACK);
 
+        colors.put("NO TEAM", ChatColor.BOLD);
+
         return colors;
     }
 

@@ -1,5 +1,6 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.ScoreboardManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,9 +14,11 @@ import java.sql.SQLException;
 public class InviteTeam implements CommandExecutor {
 
     private Connection connection;
+    private ScoreboardManager scoreboardManager;
 
-    public InviteTeam(Connection connection) {
+    public InviteTeam(Connection connection, ScoreboardManager scoreboardManager) {
         this.connection = connection;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @Override
@@ -48,6 +51,7 @@ public class InviteTeam implements CommandExecutor {
 
             // Update the invited player team
             player.sendMessage(String.format("[CTF] %S has now been added to your team!", newPlayer));
+            scoreboardManager.updatePlayerListName(newPlayer, team);
         }
 
         return true;
