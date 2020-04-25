@@ -50,18 +50,12 @@ public class BlockBreak implements Listener {
                 return;
             }
 
-            if (b.getType().equals(banners.get(playerTeamColor))) {
-                 // Drop your own flag
-                Collection<ItemStack> items = e.getBlock().getDrops();
+            // If the banner is not the same team color as the player, blow the base
+            if (!b.getType().equals(banners.get(playerTeamColor))) {
+                //player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
 
-                for (ItemStack it : items) {
-                    w.dropItemNaturally(e.getBlock().getLocation().add(0.5,  1, 0.5), it);
-                }
-            } else {
-                // If the banner is not the same team color as the player, blow the base
-                player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
                 blowTheBase(w, e);
-
+                e.setDropItems(false);
                 updateTeamScore(playerTeamColor);
             }
         }

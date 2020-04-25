@@ -12,15 +12,21 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.plugin.Plugin;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 
 public class BlockPlace implements Listener {
     private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
 
     private Plugin plugin;
+    private Connection connection;
 
-    public BlockPlace(Plugin plugin) {
+    public BlockPlace(Plugin plugin, Connection connection) {
         this.plugin = plugin;
+        this.connection = connection;
     }
 
     @EventHandler
@@ -31,8 +37,16 @@ public class BlockPlace implements Listener {
         // Check if the placed block is a banner
         if (banners.containsValue(b.getType())) {
 
-            // Check the the surrouding blocks is air (like 5x5)
+            // Player's cannot place flags which are not their team flag
+            String team = getPlayerTeam(player);
 
+            if (team == null || b.getType() != banners.get(team)) {
+                player.sendMessage("[CTF] You have to be in a team, or have the right team banner to place it out");
+                e.setCancelled(true);
+                return;
+            }
+
+            // Check the the surrounding blocks is air (like 5x5)
             Location location = b.getLocation();
 
             for (int y = 1; y < 5; y++) {
@@ -69,5 +83,25 @@ public class BlockPlace implements Listener {
             e.setCancelled(true);
             player.sendMessage("[CTF] Trying to be smart, ey? That's not allowed.");
         }
+    }
+
+
+    public String getPlayerTeam(Player player) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT t.color FROM teams t, users u WHERE u.uuid = ? AND u.team = t.id"
+            );
+            statement.setString(1, player.getUniqueId().toString());
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                return result.getString(1);
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return null;
     }
 }
