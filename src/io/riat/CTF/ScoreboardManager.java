@@ -124,7 +124,7 @@ public class ScoreboardManager {
         Player player = null;
 
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p.getDisplayName().equals(newPlayer)) {
+            if (p.getDisplayName().equalsIgnoreCase(newPlayer)) {
                 player = p;
                 break;
             }
@@ -139,8 +139,10 @@ public class ScoreboardManager {
             statement.setInt(1, team);
             ResultSet result = statement.executeQuery();
 
+
             if (result.next()) {
                 String teamName = result.getString("color");
+                System.out.println("teamName " + teamName);
 
                 updatePlayerListName(player, teamName);
             }

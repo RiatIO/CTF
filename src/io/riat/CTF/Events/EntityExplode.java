@@ -11,7 +11,6 @@ public class EntityExplode implements Listener {
     @EventHandler
     public void onEntityExplode(EntityExplodeEvent event) {
         for (Block block : event.blockList().toArray(new Block[event.blockList().size()])) {
-            System.out.println(block.getType());
             if (block.getType() == Material.WHITE_STAINED_GLASS_PANE) {
                 event.setCancelled(true);
             }
