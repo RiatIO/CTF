@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,20 +17,36 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.xml.crypto.Data;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 public class CTF extends JavaPlugin implements Listener {
-
+    private FileConfiguration config = getConfig();
     private Connection connection;
+
+    private boolean production = false;
 
     @Override
     public void onEnable() {
-
         // Database
-        Database db = new Database("localhost", 3306 ,"ctf_db", "deep", "test");
+
+        Database db;
+
+        if (!production) {
+            db = new Database("localhost", 3306, "ctf_db", "deep", "test");
+        } else {
+            db = new Database(
+                    config.getString("host"),
+                    config.getInt("port"),
+                    config.getString("database"),
+                    config.getString("username"),
+                    config.getString("password")
+            );
+        }
+
         try {
             connection = db.openConnection();
         } catch (ClassNotFoundException | SQLException e) {
@@ -39,6 +56,9 @@ public class CTF extends JavaPlugin implements Listener {
         generateMapZone();
 
         getLogger().info("Hello World 3!");
+
+        System.out.println(config.getBoolean("test"));
+        System.out.println(config.getString("db"));
 
         // Register Scoreboard manager
         ScoreboardManager scoreboardManager = new ScoreboardManager(connection);
@@ -58,14 +78,18 @@ public class CTF extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        super.onDisable();
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
     }
 
     public void generateMapZone() {
         World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
 
-        int radius = 500;
+        int radius = 200;
 
         spawn.subtract(radius / 2, 0, radius / 2);
 

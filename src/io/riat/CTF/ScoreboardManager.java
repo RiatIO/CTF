@@ -140,7 +140,7 @@ public class ScoreboardManager {
             ResultSet result = statement.executeQuery();
 
             if (result.next()) {
-                String teamName = result.getString(1);
+                String teamName = result.getString("color");
 
                 updatePlayerListName(player, teamName);
             }

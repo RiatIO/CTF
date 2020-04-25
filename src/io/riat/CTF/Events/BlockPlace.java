@@ -39,9 +39,6 @@ public class BlockPlace implements Listener {
                 for (int x = 1; x < 5; x++) {
                     for (int z = 1; z < 5; z++) {
                         location.add(x, y, z);
-
-                        //System.out.println(location.getBlock());
-
                         // Check if air
                         if (location.getBlock().getType() != Material.AIR) {
                             e.setCancelled(true);
@@ -50,8 +47,18 @@ public class BlockPlace implements Listener {
 
                             return;
                         }
-
                         location.subtract(x, y, z);
+
+                        location.add(x*-1, y, z*-1);
+                        // Check if air
+                        if (location.getBlock().getType() != Material.AIR) {
+                            e.setCancelled(true);
+
+                            player.sendMessage("[CTF] The flag should be placed with atleast 5 blocks of air");
+
+                            return;
+                        }
+                        location.subtract(x*-1, y, z*-1);
                     }
                 }
             }
