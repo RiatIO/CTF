@@ -3,10 +3,7 @@ package io.riat.CTF;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Score;
-import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,6 +38,28 @@ public class ScoreboardManager {
         getRegisteredTeamsAndScore(objective);
     }
 
+    private void createNewTeam(String name) {
+        System.out.println("CREATING TEAM " + name);
+        Team team = scoreboard.registerNewTeam(name);
+        team.setAllowFriendlyFire(false);
+        team.setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
+    }
+
+    private void createNoTeam() {
+        Team team = scoreboard.registerNewTeam("NO TEAM");
+        team.setAllowFriendlyFire(true);
+        team.setNameTagVisibility(NameTagVisibility.NEVER);
+    }
+
+    public void updateTeam(Player player, String oldTeam, String newTeam) {
+
+        Team teamOld = scoreboard.getTeam(oldTeam);
+        Team teamNew = scoreboard.getTeam(newTeam);
+
+        teamOld.removePlayer(player);
+        teamNew.addPlayer(player);
+    }
+
     public void getRegisteredTeamsAndScore(Objective objective) {
 
         try {
@@ -53,7 +72,10 @@ public class ScoreboardManager {
                 String color = teamsResult.getString("color");
                 int score = teamsResult.getInt("score");
                 objective.getScore(colors.get(color) + color).setScore(score);
+                createNewTeam(color);
             }
+
+            createNoTeam();
         } catch (SQLException e) {
             e.getStackTrace();
         }
@@ -85,12 +107,15 @@ public class ScoreboardManager {
     public void addTeam(Player player, String team) {
         objective.getScore(colors.get(team) + team).setScore(0);
         updatePlayerListName(player, team);
+        createNewTeam(team);
+
+        updateTeam(player, "NO TEAM", team);
     }
 
     public void removeTeam(String team) {
         scoreboard.resetScores(colors.get(team) + team);
-
         // Get all in that team, and remove them from the team.
+        scoreboard.getTeam(team).unregister();
     }
 
     public void setPlayerTeamName(Player player) {
@@ -105,6 +130,7 @@ public class ScoreboardManager {
                 String color = result.getString(1);
                 updatePlayerListName(player, color);
             } else {
+                System.out.println("ADDING HERERE " + player);
                 updatePlayerListName(player, "NO TEAM");
             }
 
@@ -126,16 +152,33 @@ public class ScoreboardManager {
 
         if (player == null) return;
 
-        player.setPlayerListName(
-                String.format(" %s %s[%s]", player.getDisplayName(), colors.get(team), team)
-        );
-
+        updatePlayerListName(player, team);
     }
 
     public void updatePlayerListName(Player player, String team) {
+
         player.setPlayerListName(
                 String.format(" %s %s[%s]", player.getDisplayName(), colors.get(team), team)
         );
+
+        Team t = scoreboard.getTeam(team);
+        if (t == null) return;
+        t.addPlayer(player);
+
+        /*
+        System.out.println("Team " + team);
+        Team t = scoreboard.getTeam(team);
+        if (t == null) return;
+
+        if (team.equalsIgnoreCase("NO TEAM")) {
+            System.out.println("removing " + player.getDisplayName() + " to " + team);
+            t.removePlayer(player);
+        } else {
+            System.out.println("ADDING " + player.getDisplayName() + " to " + team);
+            t.addPlayer(player);
+            System.out.println(t.getNameTagVisibility());
+        }*/
+
     }
 
     public void updatePlayerListName(String newPlayer, Integer team) {

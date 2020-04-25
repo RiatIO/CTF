@@ -63,7 +63,6 @@ public class LeaveTeam implements CommandExecutor {
     }
 
     private void leaveTeam(Integer team, Player player) {
-
         try {
             PreparedStatement teamStatement = connection.prepareStatement("SELECT * FROM teams WHERE id = ?");
             teamStatement.setInt(1, team);
@@ -111,8 +110,10 @@ public class LeaveTeam implements CommandExecutor {
                     if (removePlayerFromTeam(player.getUniqueId().toString())) {
                         player.sendMessage("[CTF] You have left the " + color + " team, farewell!");
                         scoreboardManager.updatePlayerListName(player, "NO TEAM");
+                        scoreboardManager.updateTeam(player, color, "NO TEAM");
                     }
                 }
+
             }
 
         } catch (SQLException e) {
