@@ -46,6 +46,8 @@ public class PlayerAttack implements Listener {
         LivingEntity dead = e.getEntity();
         Player killer = dead.getKiller();
 
+        if (killer == null) return;
+
         if (dead instanceof Player) {
             Player killed = (Player) dead;
 
