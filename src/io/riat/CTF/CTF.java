@@ -69,7 +69,7 @@ public class CTF extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new BlockPlace(this, connection), this);
         getServer().getPluginManager().registerEvents(new CraftItem(), this);
         getServer().getPluginManager().registerEvents(new EntityExplode(), this);
-        getServer().getPluginManager().registerEvents(new PlayerAttack(), this);
+        getServer().getPluginManager().registerEvents(new PlayerAttack(connection, scoreboardManager), this);
 
         // Register Commands
         getCommand("createteam").setExecutor(new CreateTeam(connection, this, scoreboardManager));

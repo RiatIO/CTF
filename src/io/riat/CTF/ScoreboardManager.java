@@ -59,6 +59,24 @@ public class ScoreboardManager {
         }
     }
 
+    public void updateScore(int teamID) {
+        try {
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM teams WHERE id = ?"
+            );
+            statement.setInt(1, teamID);
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                String teamColor = result.getString("color");
+                updateScore(teamColor);
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+    }
+
     public void updateScore(String team) {
         Score score = objective.getScore(colors.get(team) + team);
         score.setScore(score.getScore() + 1);
