@@ -103,7 +103,6 @@ public class BlockBreak implements Listener {
             statement.setString(1, color);
 
             if (statement.executeUpdate() > 0) {
-                System.out.println("UPDATED SCORE");
                 scoreboardManager.updateScore(color);
             }
 

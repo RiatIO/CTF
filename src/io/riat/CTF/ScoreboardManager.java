@@ -39,7 +39,6 @@ public class ScoreboardManager {
     }
 
     private void createNewTeam(String name) {
-        System.out.println("CREATING TEAM " + name);
         Team team = scoreboard.registerNewTeam(name);
         team.setAllowFriendlyFire(false);
         team.setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
@@ -130,7 +129,6 @@ public class ScoreboardManager {
                 String color = result.getString(1);
                 updatePlayerListName(player, color);
             } else {
-                System.out.println("ADDING HERERE " + player);
                 updatePlayerListName(player, "NO TEAM");
             }
 
@@ -203,7 +201,6 @@ public class ScoreboardManager {
 
             if (result.next()) {
                 String teamName = result.getString("color");
-                System.out.println("teamName " + teamName);
 
                 updatePlayerListName(player, teamName);
             }

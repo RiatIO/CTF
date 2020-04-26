@@ -86,23 +86,17 @@ public class CreateTeam implements CommandExecutor {
      * @return in the team or not.
      */
     private boolean isPlayerInTeam(Player player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?")) {
             statement.setString(1, player.getUniqueId().toString());
-            ResultSet userResult = statement.executeQuery();
 
-            if (userResult.next()) {
-                Integer team = (Integer) userResult.getObject("team");
+            try (ResultSet userResult = statement.executeQuery()) {
+                if (userResult.next()) {
+                    Integer team = (Integer) userResult.getObject("team");
 
-                // If the user is not in a team (is null), then return false
-                if (team == null) {
-                    return false;
+                    // If the user is not in a team (is null), then return false | User is already in a team!
+                    return team != null;
                 }
-
-                // User is already in a team!
-                return true;
             }
-
             // This should never happen, because users should be inserted into the database on join.
             return false;
 

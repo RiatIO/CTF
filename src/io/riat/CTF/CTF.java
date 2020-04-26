@@ -27,7 +27,7 @@ public class CTF extends JavaPlugin implements Listener {
     private FileConfiguration config = getConfig();
     private Connection connection;
 
-    private boolean production = false;
+    private boolean production = true;
 
     @Override
     public void onEnable() {
@@ -81,16 +81,17 @@ public class CTF extends JavaPlugin implements Listener {
     public void onDisable() {
         try {
             connection.close();
+
         } catch (SQLException e) {
             e.getStackTrace();
         }
     }
 
     public void generateMapZone() {
-        World world = getServer().getWorld("world");
+        World world = getServer().getWorld("CTF2");
         Location spawn = world.getSpawnLocation();
 
-        int radius = 200;
+        int radius = 250;
 
         spawn.subtract(radius / 2, 0, radius / 2);
 
