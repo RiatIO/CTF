@@ -1,8 +1,8 @@
 name: CTF
-version: 1
+version: 1.2
 author: RIAT
 main: io.riat.CTF.CTF
-api-version: 1.13
+api-version: 1.15
 commands:
   createteam:
     description: Create your team

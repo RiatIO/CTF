@@ -27,7 +27,7 @@ public class CTF extends JavaPlugin implements Listener {
     private FileConfiguration config = getConfig();
     private Connection connection;
 
-    private boolean production = true;
+    private boolean production = false;
 
     @Override
     public void onEnable() {
@@ -57,9 +57,6 @@ public class CTF extends JavaPlugin implements Listener {
 
         getLogger().info("Hello World 3!");
 
-        System.out.println(config.getBoolean("test"));
-        System.out.println(config.getString("db"));
-
         // Register Scoreboard manager
         ScoreboardManager scoreboardManager = new ScoreboardManager(connection);
 
@@ -88,7 +85,7 @@ public class CTF extends JavaPlugin implements Listener {
     }
 
     public void generateMapZone() {
-        World world = getServer().getWorld("CTF2");
+        World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
 
         int radius = 250;
