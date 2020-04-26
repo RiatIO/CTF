@@ -1,6 +1,6 @@
 package io.riat.CTF.Events;
 
-import com.mysql.jdbc.Util;
+import com.mysql.jdbc.*;
 import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.*;
