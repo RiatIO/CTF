@@ -90,7 +90,7 @@ public class ScoreboardManager {
 
             if (result.next()) {
                 String teamColor = result.getString("color");
-                updateScore(teamColor);
+                updateScore(teamColor, 1);
             }
 
         } catch (SQLException e) {
@@ -98,9 +98,9 @@ public class ScoreboardManager {
         }
     }
 
-    public void updateScore(String team) {
+    public void updateScore(String team, int points) {
         Score score = objective.getScore(colors.get(team) + team);
-        score.setScore(score.getScore() + 1);
+        score.setScore(score.getScore() + points);
     }
 
     public void addTeam(Player player, String team) {

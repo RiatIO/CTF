@@ -1,6 +1,7 @@
 package io.riat.CTF.Events;
 
 import com.mysql.jdbc.*;
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.*;
@@ -23,13 +24,13 @@ import java.util.List;
 
 public class BlockBreak implements Listener {
 
-    private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
-    private Connection connection;
+    private final HashMap<String, Material> banners = Utils.getTeamMaterialMap();
 
-    private ScoreboardManager scoreboardManager;
+    private final ScoreboardManager scoreboardManager;
+    private final DatabaseManager databaseManager;
 
-    public BlockBreak(Connection connection, ScoreboardManager scoreboardManager) {
-        this.connection = connection;
+    public BlockBreak(DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
+        this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
 
@@ -53,10 +54,10 @@ public class BlockBreak implements Listener {
             // If the banner is not the same team color as the player, blow the base
             if (!b.getType().equals(banners.get(playerTeamColor))) {
                 //player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
-
                 blowTheBase(w, e);
                 e.setDropItems(false);
                 updateTeamScore(playerTeamColor);
+                Bukkit.broadcastMessage(String.format("[CTF] Team %s just took down team %s flag!", playerTeamColor, b.getType().toString().split("_")[0]));
             }
         }
 
@@ -68,21 +69,7 @@ public class BlockBreak implements Listener {
     }
 
     public String getPlayerTeam(Player player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT t.color FROM teams t, users u WHERE u.uuid = ? AND u.team = t.id"
-            );
-            statement.setString(1, player.getUniqueId().toString());
-            ResultSet result = statement.executeQuery();
-
-            if (result.next()) {
-                return result.getString(1);
-            }
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return null;
+        return databaseManager.queryPlayerTeamColor(player);
     }
 
     public void blowTheBase(World w, BlockBreakEvent e) {
@@ -96,18 +83,8 @@ public class BlockBreak implements Listener {
     }
 
     public void updateTeamScore(String color) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "UPDATE teams SET score = score + 1 WHERE color = ?"
-            );
-            statement.setString(1, color);
-
-            if (statement.executeUpdate() > 0) {
-                scoreboardManager.updateScore(color);
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
+        if (databaseManager.updateTeamScore(color, 5)) {
+            scoreboardManager.updateScore(color, 5);
         }
     }
 }

@@ -1,5 +1,6 @@
 package io.riat.CTF.Events;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Bukkit;
@@ -24,13 +25,13 @@ public class PlayerJoin implements Listener {
 
     HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
 
-    private Connection connection;
     private Plugin plugin;
     private ScoreboardManager scoreboardManager;
+    private final DatabaseManager databaseManager;
 
-    public PlayerJoin(Plugin plugin, Connection connection, ScoreboardManager scoreboardManager) {
+    public PlayerJoin(Plugin plugin, DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
         this.plugin = plugin;
-        this.connection = connection;
+        this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
 
@@ -49,30 +50,11 @@ public class PlayerJoin implements Listener {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 
-            try {
-                PreparedStatement getPlayerStatement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
-                getPlayerStatement.setString(1, player.getUniqueId().toString());
-                ResultSet userResult = getPlayerStatement.executeQuery();
-
-                if (userResult.next()) {
-                    String name = userResult.getString("name");
-                    player.sendMessage("Welcome back, " + name);
-                } else {
-                    PreparedStatement insertPlayerStatement = connection.prepareStatement(
-                            "INSERT INTO users (uuid, name) VALUES (?, ?)"
-                    );
-                    insertPlayerStatement.setString(1, player.getUniqueId().toString());
-                    insertPlayerStatement.setString(2, player.getDisplayName());
-
-                    int usersResult = insertPlayerStatement.executeUpdate();
-
-                    if (usersResult > 0) {
-                        player.sendMessage("Welcome to CTF, " + player.getDisplayName());
-                    }
-                }
-
-            } catch (SQLException e) {
-                e.getStackTrace();
+            if (databaseManager.queryInsertPlayer(player)) {
+                player.sendMessage("Welcome to CTF, " + player.getDisplayName());
+                Bukkit.broadcastMessage("[CTF] " + player.getDisplayName() + " joined the server for the first time!");
+            } else {
+                player.sendMessage("Welcome back, " + player.getDisplayName());
             }
         });
     }

@@ -1,5 +1,6 @@
 package io.riat.CTF.Events;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -16,11 +17,11 @@ import java.sql.SQLException;
 
 public class PlayerAttack implements Listener {
 
-    private Connection connection;
-    private ScoreboardManager scoreboardManager;
+    private final ScoreboardManager scoreboardManager;
+    private final DatabaseManager databaseManager;
 
-    public PlayerAttack(Connection connection, ScoreboardManager scoreboardManager) {
-        this.connection = connection;
+    public PlayerAttack(DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
+        this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
 
@@ -51,6 +52,7 @@ public class PlayerAttack implements Listener {
         if (dead instanceof Player) {
             Player killed = (Player) dead;
 
+
             // Update the team score (check if the player killing has team).
             if (!updateTeamScore(killer, killed)) {
                 killer.sendMessage("[CTF] Your not in a team, or something went wrong...");
@@ -59,59 +61,17 @@ public class PlayerAttack implements Listener {
     }
 
     private boolean updateTeamScore(Player killer, Player killed) {
-        try {
 
-            // Check if the killer and killed is on the same team.
-            if (isKillerAndKilledOnSameTeam(killer, killed)) {
-                killer.sendMessage("[CTF] You can't get points from killing your teammates, mate");
-                return false;
-            }
+        Integer team = databaseManager.queryPlayerTeam(killer);
 
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT * FROM users WHERE uuid = ?"
-            );
-            statement.setString(1, killer.getUniqueId().toString());
-            ResultSet result = statement.executeQuery();
-
-            if (result.next()) {
-                Integer color = (Integer) result.getObject("team");
-
-                if (color == null) return false;
-
-                PreparedStatement updateStatement = connection.prepareStatement(
-                        "UPDATE teams SET score = score + 1 WHERE id = ?"
-                );
-                updateStatement.setInt(1, color);
-
-                if (updateStatement.executeUpdate() > 0) {
-                    killer.sendMessage("[CTF] You just scored a point for your team!");
-                    scoreboardManager.updateScore(color);
-                    return true;
-                }
-            }
-
-
-        } catch (SQLException e) {
-            e.getStackTrace();
+        if (team == null) {
+            return false;
         }
 
-        return false;
-    }
-
-    private boolean isKillerAndKilledOnSameTeam(Player killer, Player killed) {
-        try {
-            // Check if killer and killed is on the same team, if so, dont give any points
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT DISTINCT u1.team FROM users u1, users u2 WHERE u1.uuid = ? AND u2.uuid = ? AND u1.team = u2.team AND u1.id != u2.id"
-            );
-            statement.setString(1, killer.getUniqueId().toString());
-            statement.setString(2, killed.getUniqueId().toString());
-            ResultSet result = statement.executeQuery();
-
-            return result.next();
-
-        } catch (SQLException e) {
-            e.getStackTrace();
+        if (databaseManager.updateTeamScore(team, 1)) {
+            killer.sendMessage("[CTF] You just scored a point for your team!");
+            scoreboardManager.updateScore(team);
+            return true;
         }
 
         return false;

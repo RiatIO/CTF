@@ -1,5 +1,6 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,11 +14,11 @@ import java.sql.SQLException;
 
 public class InviteTeam implements CommandExecutor {
 
-    private Connection connection;
-    private ScoreboardManager scoreboardManager;
+    private final ScoreboardManager scoreboardManager;
+    private final DatabaseManager databaseManager;
 
-    public InviteTeam(Connection connection, ScoreboardManager scoreboardManager) {
-        this.connection = connection;
+    public InviteTeam(DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
+        this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
 
@@ -64,58 +65,10 @@ public class InviteTeam implements CommandExecutor {
      * @return in the team or not.
      */
     private Integer getPlayerTeam(Player player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
-            statement.setString(1, player.getUniqueId().toString());
-            ResultSet userResult = statement.executeQuery();
-
-            if (userResult.next()) {
-                Integer team = (Integer) userResult.getObject("team");
-
-                // User is already in a team!
-                return team;
-            }
-
-            // This should never happen, because users should be inserted into the database on join.
-            return null;
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return null;
+        return databaseManager.queryPlayerTeam(player);
     }
 
     private boolean addNewPlayerToTeam(Integer team, String player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE name = ?");
-            statement.setString(1, player);
-            ResultSet userResult = statement.executeQuery();
-
-            if (userResult.next()) {
-                int userPK = userResult.getInt(1);  // New player ID
-                Integer getTeam = (Integer) userResult.getObject("team");
-
-                System.out.println(getTeam + " " + userPK);
-
-                if (getTeam != null) {
-                    return false;
-                }
-
-                PreparedStatement updatePlayerStatement = connection.prepareStatement(
-                        "UPDATE users SET team = ? WHERE id = ?");
-
-                updatePlayerStatement.setInt(1, team);
-                updatePlayerStatement.setInt(2, userPK);
-
-                if (updatePlayerStatement.executeUpdate() > 0) {
-                    return true;
-                }
-            }
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return false;
+        return databaseManager.insertPlayerToTeam(team, player);
     }
 }

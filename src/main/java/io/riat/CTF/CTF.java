@@ -24,15 +24,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class CTF extends JavaPlugin implements Listener {
-    private FileConfiguration config = getConfig();
+    private final FileConfiguration config = getConfig();
     private Connection connection;
 
     private boolean production = false;
 
+    private DatabaseManager databaseManager;
+
     @Override
     public void onEnable() {
         // Database
-
         Database db;
 
         if (!production) {
@@ -49,6 +50,7 @@ public class CTF extends JavaPlugin implements Listener {
 
         try {
             connection = db.openConnection();
+            databaseManager = new DatabaseManager(db);
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
@@ -61,27 +63,22 @@ public class CTF extends JavaPlugin implements Listener {
         ScoreboardManager scoreboardManager = new ScoreboardManager(connection);
 
         // Register Events
-        getServer().getPluginManager().registerEvents(new PlayerJoin(this, connection, scoreboardManager), this);
-        getServer().getPluginManager().registerEvents(new BlockBreak(connection, scoreboardManager), this);
-        getServer().getPluginManager().registerEvents(new BlockPlace(this, connection), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoin(this, databaseManager, scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new BlockBreak(databaseManager, scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new BlockPlace(this, databaseManager), this);
         getServer().getPluginManager().registerEvents(new CraftItem(), this);
         getServer().getPluginManager().registerEvents(new EntityExplode(), this);
-        getServer().getPluginManager().registerEvents(new PlayerAttack(connection, scoreboardManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerAttack(databaseManager, scoreboardManager), this);
 
         // Register Commands
-        getCommand("createteam").setExecutor(new CreateTeam(connection, this, scoreboardManager));
-        getCommand("inviteteam").setExecutor(new InviteTeam(connection, scoreboardManager));
-        getCommand("leaveteam").setExecutor(new LeaveTeam(connection, scoreboardManager));
+        getCommand("createteam").setExecutor(new CreateTeam(databaseManager, this, scoreboardManager));
+        getCommand("inviteteam").setExecutor(new InviteTeam(databaseManager, scoreboardManager));
+        getCommand("leaveteam").setExecutor(new LeaveTeam(databaseManager, connection, scoreboardManager));
     }
 
     @Override
     public void onDisable() {
-        try {
-            connection.close();
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
+        databaseManager.close();
     }
 
     public void generateMapZone() {

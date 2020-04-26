@@ -25,13 +25,11 @@ public class Database {
     public Connection openConnection() throws SQLException, ClassNotFoundException {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("com.mysql.jdbc.Driver");
-        config.setJdbcUrl("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database);
+        config.setJdbcUrl("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database + "?useSSL=false");
         config.setUsername(this.username);
         config.setPassword(this.password);
 
-        config.setMinimumIdle(3);
         config.setMaximumPoolSize(5);
-        config.setConnectionTimeout(500);
 
         dataSource = new HikariDataSource(config);
 
@@ -46,9 +44,6 @@ public class Database {
     public void closePool() {
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
-            dataSource = null;
         }
     }
-
-
 }

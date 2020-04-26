@@ -1,5 +1,6 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,11 +14,13 @@ import java.sql.SQLException;
 
 public class LeaveTeam implements CommandExecutor {
 
-    private Connection connection;
-    private ScoreboardManager scoreboardManager;
+    private final Connection connection;
+    private final ScoreboardManager scoreboardManager;
+    private final DatabaseManager databaseManager;
 
-    public LeaveTeam(Connection connection, ScoreboardManager scoreboardManager) {
+    public LeaveTeam(DatabaseManager databaseManager, Connection connection, ScoreboardManager scoreboardManager) {
         this.connection = connection;
+        this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
 
@@ -37,29 +40,11 @@ public class LeaveTeam implements CommandExecutor {
             leaveTeam(team, player);
         }
 
-
         return true;
     }
 
     private Integer isPlayerInTeam(Player player) {
-
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?");
-            statement.setString(1, player.getUniqueId().toString());
-
-            ResultSet result = statement.executeQuery();
-
-            if (result.next()) {
-                Integer team = (Integer) result.getObject("team");
-
-                return team;
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return null;
+        return databaseManager.queryPlayerTeam(player);
     }
 
     private void leaveTeam(Integer team, Player player) {

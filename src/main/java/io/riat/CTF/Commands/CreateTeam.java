@@ -1,5 +1,6 @@
 package io.riat.CTF.Commands;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Bukkit;
@@ -21,12 +22,12 @@ public class CreateTeam implements CommandExecutor {
 
     private HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
 
-    private Connection connection;
+    private DatabaseManager databaseManager;
     private Plugin plugin;
     private ScoreboardManager scoreboardManager;
 
-    public CreateTeam(Connection connection, Plugin plugin, ScoreboardManager scoreboardManager) {
-        this.connection = connection;
+    public CreateTeam(DatabaseManager databaseManager, Plugin plugin, ScoreboardManager scoreboardManager) {
+        this.databaseManager = databaseManager;
         this.plugin = plugin;
         this.scoreboardManager = scoreboardManager;
     }
@@ -86,80 +87,20 @@ public class CreateTeam implements CommandExecutor {
      * @return in the team or not.
      */
     private boolean isPlayerInTeam(Player player) {
-        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM users WHERE uuid = ?")) {
-            statement.setString(1, player.getUniqueId().toString());
-
-            try (ResultSet userResult = statement.executeQuery()) {
-                if (userResult.next()) {
-                    Integer team = (Integer) userResult.getObject("team");
-
-                    // If the user is not in a team (is null), then return false | User is already in a team!
-                    return team != null;
-                }
-            }
-            // This should never happen, because users should be inserted into the database on join.
-            return false;
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return false;
+        Integer team = databaseManager.queryPlayerTeam(player);
+        System.out.println("Is player in team " + team);
+        return team != null;
     }
 
     private boolean isTeamColorUsed(String color) {
-        try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM teams WHERE color = ?");
-            statement.setString(1, color);
-            ResultSet result = statement.executeQuery();
-
-            return result.next();
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return true;
+        boolean res = databaseManager.queryTeamColor(color);
+        System.out.println("Team Color used " + res);
+        return res;
     }
 
     private boolean createTeam(Player player, String color) {
-        try {
-            // Insert new team into table, and return the primary key
-            PreparedStatement statement = connection.prepareStatement(
-                    "INSERT INTO teams (leader, color, score, flag_placed) VALUES (?, ?, ?, ?)",
-                    Statement.RETURN_GENERATED_KEYS
-            );
-            statement.setString(1, player.getUniqueId().toString());
-            statement.setString(2, color);
-            statement.setInt(3, 0);
-            statement.setInt(4, 0);
-
-            int teamsResult = statement.executeUpdate();
-
-            if (teamsResult > 0) {
-                ResultSet rs = statement.getGeneratedKeys();
-                rs.next();
-
-                int teamPK = rs.getInt(1);
-
-                // Update the user team field, with the primary key of the team.
-                PreparedStatement insertUserStatement = connection.prepareStatement(
-                        "UPDATE users SET team = ? WHERE uuid = ?"
-                );
-
-                insertUserStatement.setInt(1, teamPK);
-                insertUserStatement.setString(2, player.getUniqueId().toString());
-
-                int usersResult = insertUserStatement.executeUpdate();
-
-                if (usersResult > 0) {
-                    return true;
-                }
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-        return false;
+        boolean res = databaseManager.inertTeam(player, color);
+        System.out.println("Create team " + res);
+        return res;
     }
 }

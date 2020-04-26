@@ -1,5 +1,6 @@
 package io.riat.CTF.Events;
 
+import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -22,11 +23,11 @@ public class BlockPlace implements Listener {
     private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
 
     private Plugin plugin;
-    private Connection connection;
+    private final DatabaseManager databaseManager;
 
-    public BlockPlace(Plugin plugin, Connection connection) {
+    public BlockPlace(Plugin plugin, DatabaseManager databaseManager) {
         this.plugin = plugin;
-        this.connection = connection;
+        this.databaseManager = databaseManager;
     }
 
     @EventHandler
@@ -87,21 +88,6 @@ public class BlockPlace implements Listener {
 
 
     public String getPlayerTeam(Player player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT t.color FROM teams t, users u WHERE u.uuid = ? AND u.team = t.id"
-            );
-            statement.setString(1, player.getUniqueId().toString());
-            ResultSet result = statement.executeQuery();
-
-            if (result.next()) {
-                return result.getString(1);
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return null;
+        return databaseManager.queryPlayerTeamColor(player);
     }
 }
