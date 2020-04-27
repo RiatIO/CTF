@@ -7,9 +7,12 @@ io\riat\CTF\Database.class
 io\riat\CTF\Events\PlayerTag.class
 io\riat\CTF\CTF.class
 io\riat\CTF\Events\BlockPlace.class
+io\riat\CTF\CTF$2.class
+io\riat\CTF\CTF$3.class
 io\riat\CTF\DatabaseManager.class
 io\riat\CTF\ScoreboardManager.class
 io\riat\CTF\Events\PlayerJoin.class
 io\riat\CTF\Utils.class
+io\riat\CTF\CTF$1.class
 io\riat\CTF\Events\BlockBreak.class
 io\riat\CTF\Events\CraftItem.class

@@ -95,30 +95,30 @@ public class CTF extends JavaPlugin implements Listener {
         }
     }
 
+    public void generateMapZone() {
+        getLogger().info("Generating the map zone");
 
-    public void addChest(World world, Location spawn, int[] yMinMax, ArrayList<ItemStack> items) {
-        Random rn = new Random();
-        int low = -radius / 2;
-        int high = radius / 2;
+        World world = getServer().getWorld("world");
+        Location spawn = world.getSpawnLocation();
 
-        int xRandom = rn.nextInt(high - low) + low;
-        int zRandom = rn.nextInt(high - low) + low;
-        int yRandom = rn.nextInt(yMinMax[1] - yMinMax[0]) + yMinMax[0];
+        spawn.subtract(radius / 2, 0, radius / 2);
 
-        Block block = world.getBlockAt(
-                spawn.getBlockX() + xRandom,
-                spawn.getBlockY() + yRandom,
-                spawn.getBlockZ() + zRandom
-        );
-        block.setType(Material.CHEST);
-        Chest chest = (Chest) block.getState();
+        for (int x = 0; x < radius; x++) {
+            for (int y = 0; y < 256; y++) {
+                world.getBlockAt(spawn.getBlockX() + x, y, spawn.getBlockZ()).setType(Material.WHITE_STAINED_GLASS_PANE);
+                world.getBlockAt(spawn.getBlockX() + x, y, spawn.getBlockZ() + radius - 1).setType(Material.WHITE_STAINED_GLASS_PANE);
+            }
+        }
 
-        generatedChests.add(block);
+        for (int z = 0; z < radius; z++) {
+            for (int y = 0; y < 256; y++) {
+                world.getBlockAt(spawn.getBlockX(), y, spawn.getBlockZ() + z).setType(Material.WHITE_STAINED_GLASS_PANE);
+                world.getBlockAt(spawn.getBlockX() + radius - 1, y, spawn.getBlockZ() + z).setType(Material.WHITE_STAINED_GLASS_PANE);
+            }
+        }
 
-        Inventory inventory = chest.getBlockInventory();
-        inventory.addItem(Iterables.toArray(items, ItemStack.class));
+        getLogger().info("Map zone has been generated");
     }
-
 
     public void generateChests() {
         getLogger().info("Generating Chests");
@@ -133,47 +133,47 @@ public class CTF extends JavaPlugin implements Listener {
             }
         };
 
+        ArrayList<ItemStack> normal = new ArrayList<ItemStack>() {
+            {
+                add(new ItemStack(Material.IRON_SWORD, 1));
+                add(new ItemStack(Material.COOKED_BEEF, 4));
+                add(new ItemStack(Material.STONE_AXE, 1));
+                add(new ItemStack(Material.STONE_PICKAXE, 1));
+                add(new ItemStack(Material.TORCH, 8));
+                add(new ItemStack(Material.RED_BED, 1));
+            }
+        };
 
         // y = 150 - (rare chests) X 5
-        for (int i = 0; i < 3; i++) {
+        addChest(world, spawn, new int[] {125, 130}, rare, 2, null);
 
-            addChest(world, spawn, new int[] {125, 130}, rare);
-
-            Random rn = new Random();
-            int low = -radius / 2;
-            int high = radius / 2;
-
-            int xRandom = rn.nextInt(high - low) + low;
-            int zRandom = rn.nextInt(high - low) + low;
-
-            Block block = world.getBlockAt(spawn.getBlockX() + xRandom, 125, spawn.getBlockZ() + zRandom);
-            block.setType(Material.CHEST);
-            Chest chest = (Chest) block.getState();
-
-            generatedChests.add(block);
-
-            Inventory inv = chest.getBlockInventory();
-            ItemStack diamond_sword = new ItemStack(Material.DIAMOND_SWORD, 1);
-            ItemStack golden_apple = new ItemStack(Material.GOLDEN_APPLE, 1);
-            ItemStack ender_pearl = new ItemStack(Material.ENDER_PEARL, 2);
-            inv.addItem(diamond_sword, golden_apple, ender_pearl);
-        }
         // Y = 63 - (normals chests scattered around the map (within the generated zone) X 10
+        addChest(world, spawn, new int[] {63, 90}, normal, 30, new ArrayList<Material>() {
+            {
+                add(Material.GRASS_BLOCK);
+                add(Material.WATER);
+                add(Material.STONE);
+                add(Material.OAK_LEAVES);
+                add(Material.SAND);
+            }
+        });
 
-        int normalBoxCount = 0;
+        // Y = 11 - (rare chests) X 10
 
-        while (normalBoxCount < 30) {
+        getLogger().info("Chests has been generated");
+    }
+
+    public void addChest(World world, Location spawn, int[] yMinMax, ArrayList<ItemStack> items, int interations, ArrayList<Material> conditions) {
+        int i = 0;
+
+        while (i < interations) {
             Random rn = new Random();
             int low = -radius / 2;
             int high = radius / 2;
 
-            int yLow = 63;
-            int yHigh = 90;
-
             int xRandom = rn.nextInt(high - low) + low;
+            int yRandom = rn.nextInt(yMinMax[1] - yMinMax[0]) + yMinMax[0];
             int zRandom = rn.nextInt(high - low) + low;
-
-            int yRandom = rn.nextInt(yHigh - yLow) + yLow;
 
             Block block = world.getBlockAt(
                     spawn.getBlockX() + xRandom,
@@ -181,78 +181,27 @@ public class CTF extends JavaPlugin implements Listener {
                     spawn.getBlockZ() + zRandom
             );
 
-            Block checkBlock = world.getBlockAt(
-                    block.getLocation().getBlockX(),
-                    block.getLocation().getBlockY() - 1,
-                    block.getLocation().getBlockZ()
-            );
+            if (conditions != null) {
+                Block blockBelow = world.getBlockAt(
+                        block.getLocation().getBlockX(),
+                        block.getLocation().getBlockY() - 1,
+                        block.getLocation().getBlockZ()
+                );
 
-            //System.out.println(checkBlock.getType());
-
-            if (checkBlock.getType() == Material.GRASS_BLOCK
-                    || checkBlock.getType() == Material.WATER
-                    || checkBlock.getType() == Material.STONE
-                    || checkBlock.getType() == Material.OAK_LEAVES
-            ) {
-                block.setType(Material.CHEST);
-                Chest chest = (Chest) block.getState();
-
-                generatedChests.add(block);
-
-                Inventory inv = chest.getBlockInventory();
-
-                ArrayList<ItemStack> test = new ArrayList<>();
-                test.add(new ItemStack(Material.IRON_SWORD, 1));
-                test.add(new ItemStack(Material.COOKED_BEEF, 4));
-                test.add(new ItemStack(Material.STONE_AXE, 1));
-                test.add(new ItemStack(Material.STONE_PICKAXE, 1));
-                test.add(new ItemStack(Material.TORCH, 8));
-                test.add(new ItemStack(Material.RED_BED, 1));
-
-                inv.addItem(Iterables.toArray(test, ItemStack.class));
-                normalBoxCount++;
+                if (!conditions.contains(blockBelow.getType())) continue;
             }
+
+            block.setType(Material.CHEST);
+            Chest chest = (Chest) block.getState();
+
+            generatedChests.add(block);
+
+            Inventory inventory = chest.getBlockInventory();
+            inventory.addItem(Iterables.toArray(items, ItemStack.class));
+
+            i++;
         }
-
-        //Location{world=CraftWorld{name=world},x=-140.0,y=63.0,z=-58.0,pitch=0.0,yaw=0.0}
-
-        getLogger().info("Chests has been generated");
-        // Y = 11 - (rare chests) X 10
     }
 
-    public void generateMapZone() {
 
-        getLogger().info("Generating the map zone");
-        World world = getServer().getWorld("world");
-        Location spawn = world.getSpawnLocation();
-
-
-        spawn.subtract(radius / 2, 0, radius / 2);
-
-        for (int x = 0; x < radius; x++) {
-            for (int y = 0; y < 256; y++) {
-                world.getBlockAt(spawn.getBlockX() + x, y, spawn.getBlockZ()).setType(Material.WHITE_STAINED_GLASS_PANE);
-            }
-        }
-
-        for (int x = 0; x < radius; x++) {
-            for (int y = 0; y < 256; y++) {
-                world.getBlockAt(spawn.getBlockX() + x, y, spawn.getBlockZ() + radius - 1).setType(Material.WHITE_STAINED_GLASS_PANE);
-            }
-        }
-
-        for (int z = 0; z < radius; z++) {
-            for (int y = 0; y < 256; y++) {
-                world.getBlockAt(spawn.getBlockX(), y, spawn.getBlockZ() + z).setType(Material.WHITE_STAINED_GLASS_PANE);
-            }
-        }
-
-        for (int z = 0; z < radius; z++) {
-            for (int y = 0; y < 256; y++) {
-                world.getBlockAt(spawn.getBlockX() + radius - 1, y, spawn.getBlockZ() + z).setType(Material.WHITE_STAINED_GLASS_PANE);
-            }
-        }
-        getLogger().info("Map zone has been generated");
-
-    }
 }
