@@ -55,28 +55,17 @@ public class DatabaseManager {
 
     public boolean inertTeam(Player player, String color) {
         try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
-                     "INSERT INTO teams(color, score, flag_placed) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                     "INSERT INTO teams(color, score) VALUES (?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, color);
             statement.setInt(2, 0);
-            statement.setInt(3, 0);
 
             if (statement.executeUpdate() > 0) {
-                System.out.println("IM HERE PROMISE");
                 try (ResultSet rs = statement.getGeneratedKeys()) {
                     rs.next();
 
                     int teamPK = rs.getInt(1);
 
-                    System.out.println("PK " + teamPK);
-
-                    try (PreparedStatement insertStatement = c.prepareStatement(
-                            "UPDATE users SET team = ? WHERE uuid = ?")) {
-                        insertStatement.setInt(1, teamPK);
-                        insertStatement.setString(2, player.getUniqueId().toString());
-
-                        System.out.println("HERE");
-                        return insertStatement.executeUpdate() > 0;
-                    }
+                    return updatePlayerTeam(player.getUniqueId().toString(), teamPK);
                 }
             }
 
@@ -89,27 +78,28 @@ public class DatabaseManager {
 
     public boolean insertPlayerToTeam(Integer team, String player) {
         try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
-                "SELECT * FROM users where name = ?"
+                "SELECT * FROM users WHERE name = ?"
         )) {
             statement.setString(1, player);
 
             try (ResultSet userResult = statement.executeQuery()) {
-                int userPK = userResult.getInt(1); // New player ID
+                if (userResult.next()) {
+                    int userPK = userResult.getInt(1); // New player ID
 
-                Integer userTeam = (Integer) userResult.getObject("team");
+                    Integer userTeam = (Integer) userResult.getObject("team");
 
-                if (userTeam != null) return false;
+                    if (userTeam != null) return false;
 
-                try (PreparedStatement updatePlayerStatement = c.prepareStatement(
-                        "UPDATE users SET team = ? WHERE id = ?"
-                )) {
-                    updatePlayerStatement.setInt(1, team);
-                    updatePlayerStatement.setInt(2, userPK);
+                    try (PreparedStatement updatePlayerStatement = c.prepareStatement(
+                            "UPDATE users SET team = ? WHERE id = ?"
+                    )) {
+                        updatePlayerStatement.setInt(1, team);
+                        updatePlayerStatement.setInt(2, userPK);
 
-                    return updatePlayerStatement.executeUpdate() > 0;
+                        return updatePlayerStatement.executeUpdate() > 0;
+                    }
                 }
             }
-
         } catch (SQLException e) {
             e.getStackTrace();
         }
@@ -165,6 +155,24 @@ public class DatabaseManager {
         return null;
     }
 
+    public String queryTeamColor(Integer team) {
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT * FROM teams WHERE id = ?"
+        )) {
+            statement.setInt(1, team);
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                return result.getString("color");
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return null;
+    }
+
     public boolean updateTeamScore(String color, int points) {
         try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
                 "UPDATE teams SET score = score + ? WHERE color = ?"
@@ -196,6 +204,70 @@ public class DatabaseManager {
                 }
             }
 
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return false;
+    }
+
+    public ResultSet queryTeamOnId(Integer team) {
+
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT * FROM teams WHERE id = ?"
+        )) {
+            statement.setInt(1, team);
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) return result;
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return null;
+    }
+
+    public boolean updatePlayerTeam(String uuid, Integer team) {
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "UPDATE users SET team = ? WHERE uuid = ?"
+        )) {
+            statement.setObject(1, team);
+            statement.setString(2, uuid);
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean queryPlayersInTeam(String color) {
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT * FROM users WHERE team = ?"
+        )) {
+            statement.setString(1, color);
+
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean deleteTeam(String color) {
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "DELETE FROM teams WHERE color = ?"
+        )) {
+            statement.setString(1, color);
+
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.getStackTrace();
         }

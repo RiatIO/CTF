@@ -2,6 +2,7 @@ package io.riat.CTF.Commands;
 
 import io.riat.CTF.DatabaseManager;
 import io.riat.CTF.ScoreboardManager;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,12 +15,10 @@ import java.sql.SQLException;
 
 public class LeaveTeam implements CommandExecutor {
 
-    private final Connection connection;
     private final ScoreboardManager scoreboardManager;
     private final DatabaseManager databaseManager;
 
-    public LeaveTeam(DatabaseManager databaseManager, Connection connection, ScoreboardManager scoreboardManager) {
-        this.connection = connection;
+    public LeaveTeam(DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
         this.databaseManager = databaseManager;
         this.scoreboardManager = scoreboardManager;
     }
@@ -48,81 +47,32 @@ public class LeaveTeam implements CommandExecutor {
     }
 
     private void leaveTeam(Integer team, Player player) {
-        try {
-            PreparedStatement teamStatement = connection.prepareStatement("SELECT * FROM teams WHERE id = ?");
-            teamStatement.setInt(1, team);
-            ResultSet teamResult = teamStatement.executeQuery();
+        String color = databaseManager.queryTeamColor(team);
+        if (color == null) return;;
 
-            if (teamResult.next()) {
-                String leader = teamResult.getString("leader");
-                String color = teamResult.getString("color");
-                int teamID = teamResult.getInt("id");
+        if (removePlayerFromTeam(player.getUniqueId().toString())) {
+            player.sendMessage("[CTF] You have left the " + color + " team, farewell!");
+            scoreboardManager.updatePlayerListName(player, "NO TEAM");
+            scoreboardManager.updateTeam(player, color, "NO TEAM");
+        }
 
-                if (player.getUniqueId().toString().equals(leader)) {
-                    // if leader, kick everyone out.
-                    PreparedStatement playerStatement = connection.prepareStatement(
-                            "SELECT * FROM users WHERE team = ?"
-                    );
-                    playerStatement.setInt(1, team);
-                    ResultSet playerResult = playerStatement.executeQuery();
+        // Check how many users that are in the team
+        if (!doesTeamHaveAnyPlayers(color)) {
+            // Delete the team too
 
-                    while (playerResult.next()) {
-                        String playerUUID = playerResult.getString("uuid");
-                        String playerName = playerResult.getString("name");
-
-                        scoreboardManager.updatePlayerListName(playerName, "NO TEAM");
-
-                        if (!removePlayerFromTeam(playerUUID)) {
-                            player.sendMessage("[CTF] Player " + playerName + " had troubles leaving, wops?");
-                        }
-                    }
-
-                    // Delete the team too
-                    PreparedStatement deleteTeamStatement = connection.prepareStatement(
-                            "DELETE FROM teams WHERE id = ?"
-                    );
-                    deleteTeamStatement.setInt(1, teamID);
-
-                    if (deleteTeamStatement.executeUpdate() > 0) {
-                        player.sendMessage(
-                                "[CTF] You took down the whole team " + color + " and its players, hope you're happy"
-                        );
-
-                        scoreboardManager.removeTeam(color);
-                    }
-                } else {
-                    // if not leader, just leave the team.
-                    if (removePlayerFromTeam(player.getUniqueId().toString())) {
-                        player.sendMessage("[CTF] You have left the " + color + " team, farewell!");
-                        scoreboardManager.updatePlayerListName(player, "NO TEAM");
-                        scoreboardManager.updateTeam(player, color, "NO TEAM");
-                    }
-                }
-
+            if (databaseManager.deleteTeam(color)) {
+                Bukkit.broadcastMessage("[CTF] Team " + color + " no longer exists!");
+                scoreboardManager.removeTeam(color);
             }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
         }
     }
 
     private boolean removePlayerFromTeam(String uuid) {
+        return databaseManager.updatePlayerTeam(uuid, null);
+    }
 
-        try {
-            PreparedStatement playerStatement = connection.prepareStatement(
-                    "UPDATE users SET team = ? WHERE uuid = ?");
-            playerStatement.setObject(1, null);
-            playerStatement.setString(2, uuid);
-
-            if (playerStatement.executeUpdate() > 0) {
-                return true;
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
-
-        return false;
+    private boolean doesTeamHaveAnyPlayers(String color) {
+        return databaseManager.queryPlayersInTeam(color);
     }
 
 }

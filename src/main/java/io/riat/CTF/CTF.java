@@ -73,7 +73,7 @@ public class CTF extends JavaPlugin implements Listener {
         // Register Commands
         getCommand("createteam").setExecutor(new CreateTeam(databaseManager, this, scoreboardManager));
         getCommand("inviteteam").setExecutor(new InviteTeam(databaseManager, scoreboardManager));
-        getCommand("leaveteam").setExecutor(new LeaveTeam(databaseManager, connection, scoreboardManager));
+        getCommand("leaveteam").setExecutor(new LeaveTeam(databaseManager, scoreboardManager));
     }
 
     @Override

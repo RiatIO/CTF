@@ -1,4 +1,6 @@
 .idea
 server
 out
-src/config.yml
+resources/config.yml
+*.class
+target/*
