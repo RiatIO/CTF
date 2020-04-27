@@ -1,5 +1,6 @@
 package io.riat.CTF;
 
+import com.google.common.collect.Iterables;
 import io.riat.CTF.Commands.CreateTeam;
 import io.riat.CTF.Commands.InviteTeam;
 import io.riat.CTF.Commands.LeaveTeam;
@@ -31,21 +32,20 @@ import java.util.Random;
 
 public class CTF extends JavaPlugin implements Listener {
     private final FileConfiguration config = getConfig();
-    private Connection connection;
-
-    private boolean production = false;
 
     private DatabaseManager databaseManager;
 
     private final int radius = 500;
 
-    private ArrayList<Block> generatedChests = new ArrayList<>();
+    private final ArrayList<Block> generatedChests = new ArrayList<>();
 
 
     @Override
     public void onEnable() {
         // Database
         Database db;
+
+        boolean production = false;
 
         if (!production) {
             db = new Database("localhost", 3306, "ctf_db", "deep", "test");
@@ -59,12 +59,7 @@ public class CTF extends JavaPlugin implements Listener {
             );
         }
 
-        try {
-            connection = db.openConnection();
-            databaseManager = new DatabaseManager(db);
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        }
+        databaseManager = new DatabaseManager(db);
 
         generateMapZone();
         generateChests();
@@ -93,7 +88,6 @@ public class CTF extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         getLogger().info("Disabling plugin");
-        System.out.println("Disabling");
         databaseManager.close();
 
         for (Block b : generatedChests) {
@@ -101,17 +95,50 @@ public class CTF extends JavaPlugin implements Listener {
         }
     }
 
+
+    public void addChest(World world, Location spawn, int[] yMinMax, ArrayList<ItemStack> items) {
+        Random rn = new Random();
+        int low = -radius / 2;
+        int high = radius / 2;
+
+        int xRandom = rn.nextInt(high - low) + low;
+        int zRandom = rn.nextInt(high - low) + low;
+        int yRandom = rn.nextInt(yMinMax[1] - yMinMax[0]) + yMinMax[0];
+
+        Block block = world.getBlockAt(
+                spawn.getBlockX() + xRandom,
+                spawn.getBlockY() + yRandom,
+                spawn.getBlockZ() + zRandom
+        );
+        block.setType(Material.CHEST);
+        Chest chest = (Chest) block.getState();
+
+        generatedChests.add(block);
+
+        Inventory inventory = chest.getBlockInventory();
+        inventory.addItem(Iterables.toArray(items, ItemStack.class));
+    }
+
+
     public void generateChests() {
         getLogger().info("Generating Chests");
         World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
 
-        //spawn.add(0, 50, 0);
-        //Block block = spawn.getBlock();
+        ArrayList<ItemStack> rare = new ArrayList<ItemStack>() {
+            {
+                add(new ItemStack(Material.DIAMOND_SWORD, 1));
+                add(new ItemStack(Material.GOLDEN_APPLE, 1));
+                add(new ItemStack(Material.ENDER_PEARL, 2));
+            }
+        };
 
 
         // y = 150 - (rare chests) X 5
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 3; i++) {
+
+            addChest(world, spawn, new int[] {125, 130}, rare);
+
             Random rn = new Random();
             int low = -radius / 2;
             int high = radius / 2;
@@ -119,7 +146,7 @@ public class CTF extends JavaPlugin implements Listener {
             int xRandom = rn.nextInt(high - low) + low;
             int zRandom = rn.nextInt(high - low) + low;
 
-            Block block = world.getBlockAt(spawn.getBlockX() + xRandom, 150, spawn.getBlockZ() + zRandom);
+            Block block = world.getBlockAt(spawn.getBlockX() + xRandom, 125, spawn.getBlockZ() + zRandom);
             block.setType(Material.CHEST);
             Chest chest = (Chest) block.getState();
 
@@ -135,7 +162,7 @@ public class CTF extends JavaPlugin implements Listener {
 
         int normalBoxCount = 0;
 
-        while (normalBoxCount < 50) {
+        while (normalBoxCount < 30) {
             Random rn = new Random();
             int low = -radius / 2;
             int high = radius / 2;
@@ -160,7 +187,7 @@ public class CTF extends JavaPlugin implements Listener {
                     block.getLocation().getBlockZ()
             );
 
-            System.out.println(checkBlock.getType());
+            //System.out.println(checkBlock.getType());
 
             if (checkBlock.getType() == Material.GRASS_BLOCK
                     || checkBlock.getType() == Material.WATER
@@ -173,11 +200,16 @@ public class CTF extends JavaPlugin implements Listener {
                 generatedChests.add(block);
 
                 Inventory inv = chest.getBlockInventory();
-                ItemStack item1 = new ItemStack(Material.IRON_SWORD, 1);
-                ItemStack item2 = new ItemStack(Material.COOKED_BEEF, 10);
-                ItemStack item3 = new ItemStack(Material.IRON_PICKAXE, 2);
-                inv.addItem(item1, item2, item3);
-                System.out.println(block.getLocation());
+
+                ArrayList<ItemStack> test = new ArrayList<>();
+                test.add(new ItemStack(Material.IRON_SWORD, 1));
+                test.add(new ItemStack(Material.COOKED_BEEF, 4));
+                test.add(new ItemStack(Material.STONE_AXE, 1));
+                test.add(new ItemStack(Material.STONE_PICKAXE, 1));
+                test.add(new ItemStack(Material.TORCH, 8));
+                test.add(new ItemStack(Material.RED_BED, 1));
+
+                inv.addItem(Iterables.toArray(test, ItemStack.class));
                 normalBoxCount++;
             }
         }
