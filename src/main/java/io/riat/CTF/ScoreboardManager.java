@@ -12,15 +12,15 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 public class ScoreboardManager {
-    private HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
+    private final HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
 
-    private Connection connection;
+    private final DatabaseManager databaseManager;
 
-    private Scoreboard scoreboard;
+    private final Scoreboard scoreboard;
     private Objective objective;
 
-    public ScoreboardManager(Connection connection) {
-        this.connection = connection;
+    public ScoreboardManager(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         init();
     }
@@ -62,7 +62,7 @@ public class ScoreboardManager {
     public void getRegisteredTeamsAndScore(Objective objective) {
 
         try {
-            PreparedStatement statement = connection.prepareStatement(
+            PreparedStatement statement = databaseManager.getConnection().prepareStatement(
                     "SELECT * FROM teams"
             );
             ResultSet teamsResult = statement.executeQuery();
@@ -81,21 +81,10 @@ public class ScoreboardManager {
     }
 
     public void updateScore(int teamID) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT * FROM teams WHERE id = ?"
-            );
-            statement.setInt(1, teamID);
-            ResultSet result = statement.executeQuery();
+        String color = databaseManager.queryTeamColor(teamID);
+        if (color == null) return;
 
-            if (result.next()) {
-                String teamColor = result.getString("color");
-                updateScore(teamColor, 1);
-            }
-
-        } catch (SQLException e) {
-            e.getStackTrace();
-        }
+        updateScore(color, 1);
     }
 
     public void updateScore(String team, int points) {
@@ -118,24 +107,14 @@ public class ScoreboardManager {
     }
 
     public void setPlayerTeamName(Player player) {
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT t.color FROM teams t, users u WHERE u.uuid = ? AND u.team = t.id"
-            );
-            statement.setString(1, player.getUniqueId().toString());
-            ResultSet result = statement.executeQuery();
 
-            if (result.next()) {
-                String color = result.getString(1);
-                updatePlayerListName(player, color);
-            } else {
-                updatePlayerListName(player, "NO TEAM");
-            }
+        String color = databaseManager.queryPlayerTeamColor(player);
 
-        } catch (SQLException e) {
-            e.getStackTrace();
+        if (color == null) {
+            updatePlayerListName(player, "NO TEAM");
+        } else {
+            updatePlayerListName(player, color);
         }
-
     }
 
     public void updatePlayerListName(String uPlayer, String team) {
@@ -181,33 +160,18 @@ public class ScoreboardManager {
 
     public void updatePlayerListName(String newPlayer, Integer team) {
         Player player = null;
-
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p.getDisplayName().equalsIgnoreCase(newPlayer)) {
                 player = p;
                 break;
             }
         }
-
         if (player == null) return;
 
-        try {
-            PreparedStatement statement = connection.prepareStatement(
-                    "SELECT * FROM teams WHERE id = ?"
-            );
-            statement.setInt(1, team);
-            ResultSet result = statement.executeQuery();
+        String color = databaseManager.queryTeamColor(team);
+        if (color == null) return;
 
-
-            if (result.next()) {
-                String teamName = result.getString("color");
-
-                updatePlayerListName(player, teamName);
-            }
-
-        } catch(SQLException e) {
-            e.getStackTrace();
-        }
+        updatePlayerListName(player, color);
     }
 
     public Objective getObjective() {

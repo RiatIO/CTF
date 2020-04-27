@@ -274,4 +274,21 @@ public class DatabaseManager {
 
         return false;
     }
+
+
+    public ResultSet queryAllTeams() {
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT * FROM teams"
+        )) {
+            return statement.executeQuery();
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return null;
+    }
+
+    public Connection getConnection() throws SQLException {
+        return db.getConnection();
+    }
 }
