@@ -4,3 +4,4 @@ out
 resources/config.yml
 *.class
 target
+main/resources/config.yml
