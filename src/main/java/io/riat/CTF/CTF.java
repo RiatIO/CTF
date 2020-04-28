@@ -45,7 +45,7 @@ public class CTF extends JavaPlugin implements Listener {
         // Database
         Database db;
 
-        boolean production = false;
+        boolean production = true;
 
         if (!production) {
             db = new Database("localhost", 3306, "ctf_db", "deep", "test");
@@ -142,6 +142,7 @@ public class CTF extends JavaPlugin implements Listener {
                 add(new ItemStack(Material.STONE_PICKAXE, 1));
                 add(new ItemStack(Material.TORCH, 8));
                 add(new ItemStack(Material.RED_BED, 1));
+                add(new ItemStack(Material.SUGAR_CANE, 2));
             }
         };
 

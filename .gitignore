@@ -3,4 +3,4 @@ server
 out
 resources/config.yml
 *.class
-target/*
+target
