@@ -52,7 +52,6 @@ public class PlayerAttack implements Listener {
         if (dead instanceof Player) {
             Player killed = (Player) dead;
 
-
             // Update the team score (check if the player killing has team).
             if (!updateTeamScore(killer, killed)) {
                 killer.sendMessage("[CTF] Your not in a team, or something went wrong...");
@@ -68,10 +67,14 @@ public class PlayerAttack implements Listener {
             return false;
         }
 
-        if (databaseManager.updateTeamScore(team, 1)) {
-            killer.sendMessage("[CTF] You just scored a point for your team!");
-            scoreboardManager.updateScore(team);
-            return true;
+        if (databaseManager.queryFlagPlaced(team)) {
+            if (databaseManager.updateTeamScore(team, 1)) {
+                killer.sendMessage("[CTF] You just scored a point for your team!");
+                scoreboardManager.updateScore(team);
+                return true;
+            }
+        } else {
+            killer.sendMessage("[CTF] You didn't score any points! Your team hasn't played their flag, yet...");
         }
 
         return false;

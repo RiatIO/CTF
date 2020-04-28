@@ -83,6 +83,7 @@ public class CTF extends JavaPlugin implements Listener {
         getCommand("leaveteam").setExecutor(new LeaveTeam(databaseManager, scoreboardManager));
 
         //getCommand("flag").setExecutor(new Flag());
+        System.out.println("Time: " + System.currentTimeMillis() / 1000L);
     }
 
     @Override
@@ -148,7 +149,7 @@ public class CTF extends JavaPlugin implements Listener {
         addChest(world, spawn, new int[] {125, 130}, rare, 2, null);
 
         // Y = 63 - (normals chests scattered around the map (within the generated zone) X 10
-        addChest(world, spawn, new int[] {63, 90}, normal, 30, new ArrayList<Material>() {
+        addChest(world, spawn, new int[] {63, 90}, normal, 20, new ArrayList<Material>() {
             {
                 add(Material.GRASS_BLOCK);
                 add(Material.WATER);

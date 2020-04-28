@@ -58,7 +58,7 @@ public class BlockPlace implements Listener {
                         if (location.getBlock().getType() != Material.AIR) {
                             e.setCancelled(true);
 
-                            player.sendMessage("[CTF] The flag should be placed with atleast 5 blocks of air");
+                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air");
 
                             return;
                         }
@@ -69,7 +69,7 @@ public class BlockPlace implements Listener {
                         if (location.getBlock().getType() != Material.AIR) {
                             e.setCancelled(true);
 
-                            player.sendMessage("[CTF] The flag should be placed with atleast 5 blocks of air");
+                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air");
 
                             return;
                         }
@@ -78,6 +78,7 @@ public class BlockPlace implements Listener {
                 }
             }
 
+            databaseManager.flagPlaced(player);
         }
 
         if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {

@@ -37,6 +37,29 @@ public class DatabaseManager {
         return null;
     }
 
+    public Integer queryTeamId(String team) {
+
+        try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement("SELECT * FROM teams WHERE color = ?"))
+        {
+            statement.setString(1, team);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    Integer id = (Integer) result.getObject("id");
+
+                    return id;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return null;
+    }
+
+
+
     public boolean queryTeamColor(String color) {
         try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement("SELECT * FROM teams WHERE color = ?"))
         {
@@ -290,5 +313,64 @@ public class DatabaseManager {
 
     public Connection getConnection() throws SQLException {
         return db.getConnection();
+    }
+
+    public boolean flagPlaced(Player player) {
+        Integer team = queryPlayerTeam(player);
+        if (team != null) {
+            try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                    "INSERT INTO flags (teamid, timestamp) VALUES (?, ?)"
+            )) {
+                statement.setInt(1, team);
+                statement.setLong(2, System.currentTimeMillis());
+
+                return statement.executeUpdate() > 0;
+
+            } catch (SQLException e) {
+                e.getStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public boolean flagRemoved(String color) {
+        Integer teamId = queryTeamId(color);
+
+        if (teamId != null) {
+            try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
+                    "DELETE FROM flags WHERE teamid = ?"
+            )) {
+                statement.setInt(1, teamId);
+
+                return statement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                e.getStackTrace();
+            }
+        }
+
+        return false;
+    }
+
+    public boolean queryFlagPlaced(Integer team) {
+        if (team == null) return false;
+
+        try (Connection c = getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT * FROM flags WHERE teamid = ?"
+        )) {
+            statement.setInt(1, team);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean queryFlagPlaced(String color) {
+        Integer team = queryTeamId(color);
+        return queryFlagPlaced(team);
     }
 }

@@ -63,6 +63,7 @@ public class LeaveTeam implements CommandExecutor {
             if (databaseManager.deleteTeam(color)) {
                 Bukkit.broadcastMessage("[CTF] Team " + color + " no longer exists!");
                 scoreboardManager.removeTeam(color);
+                databaseManager.flagRemoved(color);
             }
         }
     }

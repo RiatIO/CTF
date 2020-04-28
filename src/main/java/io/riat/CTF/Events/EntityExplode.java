@@ -14,6 +14,10 @@ public class EntityExplode implements Listener {
             if (block.getType() == Material.WHITE_STAINED_GLASS_PANE) {
                 event.setCancelled(true);
             }
+
+            if (block.getType().toString().contains("BANNER")) {
+                event.setCancelled(true);
+            }
         }
     }
 }

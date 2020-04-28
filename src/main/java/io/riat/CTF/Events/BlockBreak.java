@@ -40,6 +40,10 @@ public class BlockBreak implements Listener {
         Block b = e.getBlock();
         World w = e.getPlayer().getWorld();
 
+        if (w.getBlockAt(b.getLocation().add(0, 1, 0)).getType().toString().contains("BANNER")) {
+            e.setCancelled(true);
+        }
+
         // If the block getting destroyed is of type banner
         if (banners.containsValue(b.getType())) {
             String playerTeamColor = getPlayerTeam(player);
@@ -51,14 +55,24 @@ public class BlockBreak implements Listener {
                 return;
             }
 
+            String flag = b.getType().toString().split("_")[0];
+
             // If the banner is not the same team color as the player, blow the base
             if (!b.getType().equals(banners.get(playerTeamColor))) {
-                //player.sendMessage(ChatColor.GOLD + "[CTF] " + ChatColor.RESET + "Pick up the flag, and RUN!");
                 blowTheBase(w, e);
                 e.setDropItems(false);
-                updateTeamScore(playerTeamColor);
-                Bukkit.broadcastMessage(String.format("[CTF] Team %s just took down team %s flag!", playerTeamColor, b.getType().toString().split("_")[0]));
+
+                // Check if player has their flag placed.
+                if (databaseManager.queryFlagPlaced(playerTeamColor)) {
+                    updateTeamScore(playerTeamColor);
+                } else {
+                    player.sendMessage("[CTF] You didn't score any points! Your team hasn't played their flag, yet...");
+                }
+
+                Bukkit.broadcastMessage(String.format("[CTF] Team %s just took down team %s flag!", playerTeamColor, flag));
             }
+
+            databaseManager.flagRemoved(flag);
         }
 
         // Prevent people from destroying the area restriction.
