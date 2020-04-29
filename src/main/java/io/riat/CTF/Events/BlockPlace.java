@@ -35,6 +35,12 @@ public class BlockPlace implements Listener {
         Player player = e.getPlayer();
         Block b = e.getBlock();
 
+        // Check if there are banners around the block, if it is, dont place it.
+        if (isBlockPlacedAroundBanner(b)) {
+            player.sendMessage("[CTF] You cannot place a block around the flag!");
+            e.setCancelled(true);
+        }
+
         // Check if the placed block is a banner
         if (banners.containsValue(b.getType())) {
 
@@ -88,6 +94,8 @@ public class BlockPlace implements Listener {
             databaseManager.flagPlaced(player);
         }
 
+
+        // The dome is made out of White stained glass, can't allow players to place that material.
         if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {
             e.setCancelled(true);
             player.sendMessage("[CTF] Trying to be smart, ey? That's not allowed.");
@@ -98,4 +106,36 @@ public class BlockPlace implements Listener {
     public String getPlayerTeam(Player player) {
         return databaseManager.queryPlayerTeamColor(player);
     }
+
+
+    private boolean isBlockPlacedAroundBanner(Block block) {
+        World world = plugin.getServer().getWorld("world");
+        Location location = block.getLocation();
+
+        // Allow placing the flag.
+        if (banners.containsValue(block.getType())) {
+            return false;
+        }
+
+        for (int x = -5; x < 5; x++) {
+            for (int y = -5; y < 5; y++) {
+                for (int z = -5; z < 5; z++) {
+
+                    Block current = world.getBlockAt(
+                            location.getBlockX() + x,
+                            location.getBlockY() + y,
+                            location.getBlockZ() + z
+                    );
+
+                    if (banners.containsValue(current.getType())) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+
+        return false;
+    }
+
 }
