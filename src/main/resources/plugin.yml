@@ -14,3 +14,6 @@ commands:
   leaveteam:
     description: Leave the team
     usage: /leaveteam <YES>
+  flagteam:
+    description: Get a new team flag
+    /usage: /flagteam

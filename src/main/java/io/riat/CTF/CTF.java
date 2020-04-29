@@ -2,6 +2,7 @@ package io.riat.CTF;
 
 import com.google.common.collect.Iterables;
 import io.riat.CTF.Commands.CreateTeam;
+import io.riat.CTF.Commands.FlagTeam;
 import io.riat.CTF.Commands.InviteTeam;
 import io.riat.CTF.Commands.LeaveTeam;
 import io.riat.CTF.Events.*;
@@ -10,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.Sign;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -45,7 +47,7 @@ public class CTF extends JavaPlugin implements Listener {
         // Database
         Database db;
 
-        boolean production = true;
+        boolean production = false;
 
         if (!production) {
             db = new Database("localhost", 3306, "ctf_db", "deep", "test");
@@ -63,6 +65,7 @@ public class CTF extends JavaPlugin implements Listener {
 
         generateMapZone();
         generateChests();
+        generateInstructions();
 
         getLogger().info("Hello World 3!");
 
@@ -81,6 +84,7 @@ public class CTF extends JavaPlugin implements Listener {
         getCommand("createteam").setExecutor(new CreateTeam(databaseManager, this, scoreboardManager));
         getCommand("inviteteam").setExecutor(new InviteTeam(databaseManager, scoreboardManager));
         getCommand("leaveteam").setExecutor(new LeaveTeam(databaseManager, scoreboardManager));
+        getCommand("flagteam").setExecutor(new FlagTeam(databaseManager, scoreboardManager));
 
         //getCommand("flag").setExecutor(new Flag());
         System.out.println("Time: " + System.currentTimeMillis() / 1000L);
@@ -119,6 +123,58 @@ public class CTF extends JavaPlugin implements Listener {
         }
 
         getLogger().info("Map zone has been generated");
+    }
+
+    public void generateInstructions() {
+        World world = getServer().getWorld("world");
+        Location spawn = world.getSpawnLocation();
+
+        int radius = 50;
+
+        String[][] signs = new String[][] {
+                new String[] {
+                        "Welcome to CTF!",
+                        "----------------",
+                        "Created by",
+                        "Perelan"
+                },
+                new String[] {
+                        "The goal is to",
+                        "gather points by",
+                        "killing or taking",
+                        "down enemy flags"
+                },
+                new String[] {
+                        "In order to get",
+                        "points, you need",
+                        "to create a team",
+                        "or be invited!"
+                },
+                new String[] {
+                        "Commands:",
+                        "/createteam",
+                        "/inviteteam",
+                        "/leaveteam",
+                }
+        };
+
+
+        for (int i = 0; i < signs.length; i++) {
+            Block b = world.getBlockAt(
+                    spawn.getBlockX(),
+                    spawn.getBlockY() + i,
+                    spawn.getBlockZ() - 1
+            );
+
+            b.setType(Material.BIRCH_SIGN);
+            Sign sign = (Sign) b.getState();
+
+            for (int j = 0; j < signs[i].length; j++) {
+                sign.setLine(j, signs[i][j]);
+            }
+
+            sign.update();
+        }
     }
 
     public void generateChests() {

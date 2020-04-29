@@ -59,7 +59,6 @@ public class DatabaseManager {
     }
 
 
-
     public boolean queryTeamColor(String color) {
         try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement("SELECT * FROM teams WHERE color = ?"))
         {

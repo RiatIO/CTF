@@ -47,6 +47,13 @@ public class BlockPlace implements Listener {
                 return;
             }
 
+            // Check if team has placed a flag
+            if (databaseManager.queryFlagPlaced(team)) {
+                player.sendMessage("[CTF] You can only place one flag at the time!");
+                e.setCancelled(true);
+                return;
+            }
+
             // Check the the surrounding blocks is air (like 5x5)
             Location location = b.getLocation();
 

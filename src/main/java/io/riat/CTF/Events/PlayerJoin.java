@@ -5,20 +5,14 @@ import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 
 public class PlayerJoin implements Listener {
@@ -49,8 +43,10 @@ public class PlayerJoin implements Listener {
     private void asyncUserStatus(Player player) {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-
             if (databaseManager.queryInsertPlayer(player)) {
+                World w = plugin.getServer().getWorld("world");
+                Location spawn = w.getSpawnLocation();
+
                 player.sendMessage("Welcome to CTF, " + player.getDisplayName());
                 Bukkit.broadcastMessage("[CTF] " + player.getDisplayName() + " joined the server for the first time!");
             } else {
