@@ -1,6 +1,6 @@
 name: CTF
-version: 1.2
-author: RIAT
+version: 2.0
+author: Perelan
 main: io.riat.CTF.CTF
 api-version: 1.15
 depends: Essentials

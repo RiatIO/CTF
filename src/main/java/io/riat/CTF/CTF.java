@@ -47,7 +47,7 @@ public class CTF extends JavaPlugin implements Listener {
         // Database
         Database db;
 
-        boolean production = false;
+        boolean production = true;
 
         if (!production) {
             db = new Database("localhost", 3306, "ctf_db", "deep", "test");
@@ -87,7 +87,6 @@ public class CTF extends JavaPlugin implements Listener {
         getCommand("flagteam").setExecutor(new FlagTeam(databaseManager, scoreboardManager));
 
         //getCommand("flag").setExecutor(new Flag());
-        System.out.println("Time: " + System.currentTimeMillis() / 1000L);
     }
 
     @Override
@@ -105,8 +104,6 @@ public class CTF extends JavaPlugin implements Listener {
 
         World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
-
-        System.out.println("To String " + spawn.toString());
 
         spawn.subtract(radius / 2, 0, radius / 2);
 
