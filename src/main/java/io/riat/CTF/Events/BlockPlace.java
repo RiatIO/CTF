@@ -20,6 +20,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class BlockPlace implements Listener {
     private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
 
@@ -41,7 +43,7 @@ public class BlockPlace implements Listener {
 
         // Check if there are banners around the block, if it is, dont place it.
         if (isBlockPlacedAroundBanner(b)) {
-            player.sendMessage("[CTF] You cannot place a block around the flag!");
+            player.sendMessage(CTF_TAG + "You cannot place a block around the flag!");
             e.setCancelled(true);
         }
 
@@ -50,7 +52,7 @@ public class BlockPlace implements Listener {
 
             // Check height of the flag (max 200 Y)
             if (b.getY() > 150) {
-                player.sendMessage("[CTF] Flag has to be placed a bit lower...");
+                player.sendMessage(CTF_TAG + "Flag has to be placed a bit lower...");
                 e.setCancelled(true);
                 return;
             }
@@ -59,7 +61,7 @@ public class BlockPlace implements Listener {
             String team = getPlayerTeam(player);
 
             if (team == null) {
-                player.sendMessage("[CTF] You have to be in a team, or have the right team banner to place it out");
+                player.sendMessage(CTF_TAG + "You have to be in a team, or have the right team banner to place it out");
                 e.setCancelled(true);
                 return;
             }
@@ -68,7 +70,7 @@ public class BlockPlace implements Listener {
             // Check if the team flag is in the area to score points
             if (b.getType() != banners.get(team)) {
                 if (!isBlockEnemyFlagPlacedInBase(world, b, banners.get(team))) {
-                    player.sendMessage("[CTF] The enemy flag has to be placed next to your own flag!");
+                    player.sendMessage(CTF_TAG + "The enemy flag has to be placed next to your own flag!");
                     e.setCancelled(true);
                 } else {
                     // Remove the block
@@ -120,7 +122,7 @@ public class BlockPlace implements Listener {
                         if (current.getType() == b.getType()) continue;
 
                         if (current.getType() != Material.AIR && current.getType() != Material.CAVE_AIR && current.getType() != Material.VOID_AIR) {
-                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air around");
+                            player.sendMessage(CTF_TAG + "The flag should be placed with at least 5 blocks of air around");
                             e.setCancelled(true);
                             return;
                         }
@@ -136,7 +138,11 @@ public class BlockPlace implements Listener {
         // The dome is made out of White stained glass, can't allow players to place that material.
         if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {
             e.setCancelled(true);
-            player.sendMessage("[CTF] Trying to be smart, ey? That's not allowed.");
+            player.sendMessage(CTF_TAG + "Trying to be smart, ey? That's not allowed.");
+        }
+
+        if (b.getType().toString().contains("WALL_BANNER")) {
+            e.setCancelled(true);
         }
     }
 

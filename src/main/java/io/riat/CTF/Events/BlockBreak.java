@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class BlockBreak implements Listener {
 
     private final HashMap<String, Material> banners = Utils.getTeamMaterialMap();
@@ -51,13 +53,13 @@ public class BlockBreak implements Listener {
             // Check what team the player is in a team.
             if (playerTeamColor == null) {
                 e.setCancelled(true);
-                player.sendMessage("[CTF] You should probably be in a team before you do that.");
+                player.sendMessage(CTF_TAG + "You should probably be in a team before you do that.");
                 return;
             }
 
             String flagLocation = databaseManager.queryFlagPlaced(playerTeamColor);
             if (flagLocation == null) {
-                player.sendMessage("[CTF] You can't do that. Your team hasn't placed their flag, yet...");
+                player.sendMessage(CTF_TAG + "You can't do that. Your team hasn't placed their flag, yet...");
                 e.setCancelled(true);
                 return;
             }
@@ -66,14 +68,14 @@ public class BlockBreak implements Listener {
 
             // If the banner is not the same team color as the player, blow the base
             if (!b.getType().equals(banners.get(playerTeamColor))) {
-                blowTheBase(w, e);
+                blowTheBase(w, e, flag);
                 e.setDropItems(false);
 
                 // Give the flag killer the flag
                 player.getInventory().addItem(new ItemStack(b.getType()));
-                player.sendMessage("[CTF] Bring back the enemy flag to your own base, and place it to get 5 points!");
+                player.sendMessage(CTF_TAG + "Bring back the enemy flag to your own base, and place it to get 5 points!");
 
-                Bukkit.broadcastMessage(String.format("[CTF] Team %s just took down team %s flag!", playerTeamColor, flag));
+                Bukkit.broadcastMessage(String.format(CTF_TAG + "Team %s just took down team %s flag!", playerTeamColor, flag));
             }
 
             databaseManager.flagRemoved(flag);
@@ -82,7 +84,7 @@ public class BlockBreak implements Listener {
         // Prevent people from destroying the area restriction.
         if (b.getType() == Material.WHITE_STAINED_GLASS_PANE) {
             e.setCancelled(true);
-            player.sendMessage("[CTF] You can't break the dome, dude.");
+            player.sendMessage(CTF_TAG + "You can't break the dome, dude.");
         }
     }
 
@@ -90,14 +92,14 @@ public class BlockBreak implements Listener {
         return databaseManager.queryPlayerTeamColor(player);
     }
 
-    public void blowTheBase(World w, BlockBreakEvent e) {
+    public void blowTheBase(World w, BlockBreakEvent e, String flag) {
         for (int i = 0; i < 10; i++) {
             w.spawn(e.getBlock().getLocation().add(i, i, 1), TNTPrimed.class).setFuseTicks(200);
             w.spawn(e.getBlock().getLocation().add(1, i, i), TNTPrimed.class).setFuseTicks(200);
             w.spawn(e.getBlock().getLocation().add(-1 * i, i, 1), TNTPrimed.class).setFuseTicks(200);
             w.spawn(e.getBlock().getLocation().add(1, i, -1 * i), TNTPrimed.class).setFuseTicks(200);
         }
-        Bukkit.broadcastMessage("[CTF] - Black base self-destructing in 10 seconds...");
+        Bukkit.broadcastMessage(CTF_TAG + flag + " base self-destructing in 10 seconds...");
     }
 
     public void updateTeamScore(String color) {

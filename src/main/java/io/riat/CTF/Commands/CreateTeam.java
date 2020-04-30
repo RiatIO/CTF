@@ -18,6 +18,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import java.sql.*;
 import java.util.HashMap;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class CreateTeam implements CommandExecutor {
 
     private HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
@@ -51,23 +53,23 @@ public class CreateTeam implements CommandExecutor {
             }
 
             if (isPlayerInTeam(player)) {
-                player.sendMessage("[CTF] You're already in a team! Leave by typing /leaveteam");
+                player.sendMessage(CTF_TAG + "You're already in a team! Leave by typing /leaveteam");
                 return true;
             }
 
             if (isTeamColorUsed(teamColor)) {
-                player.sendMessage("[CTF] Team is already selected, try again!");
+                player.sendMessage(CTF_TAG + "Team is already selected, try again!");
                 return false;
             }
 
 
             if (!createTeam(player, teamColor)) {
-                player.sendMessage("[CTF] Something went wrong while parsing the data, beep boop.");
+                player.sendMessage(CTF_TAG + "Something went wrong while parsing the data, beep boop.");
                 return false;
             }
 
             player.sendMessage(String.format(
-                    "[CTF] Team (%s) has been created! Do /teaminvite [PLAYER] to invite other players",
+                    CTF_TAG + "Team (%s) has been created! Do /teaminvite [PLAYER] to invite other players",
                     teamColor
                 )
             );

@@ -14,6 +14,8 @@ import org.bukkit.inventory.Recipe;
 
 import java.util.HashMap;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class CraftItem implements Listener {
     private HashMap<String, Material> banners = Utils.getTeamMaterialMap();
 
@@ -29,7 +31,7 @@ public class CraftItem implements Listener {
 
                 for (HumanEntity he : e.getViewers()) {
                     if (he instanceof Player) {
-                        ((Player)he).sendMessage("[CTF] You cheeky lad! You cannot craft this!");
+                        ((Player)he).sendMessage(CTF_TAG + "You cheeky lad! You cannot craft this!");
                     }
                 }
             }

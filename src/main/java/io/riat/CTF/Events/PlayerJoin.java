@@ -15,6 +15,8 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.HashMap;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class PlayerJoin implements Listener {
 
     HashMap<String, ChatColor> colors = Utils.getTeamColorMap();
@@ -48,7 +50,7 @@ public class PlayerJoin implements Listener {
                 Location spawn = w.getSpawnLocation();
 
                 player.sendMessage("Welcome to CTF, " + player.getDisplayName());
-                Bukkit.broadcastMessage("[CTF] " + player.getDisplayName() + " joined the server for the first time!");
+                Bukkit.broadcastMessage(CTF_TAG + player.getDisplayName() + " joined the server for the first time!");
             } else {
                 player.sendMessage("Welcome back, " + player.getDisplayName());
             }

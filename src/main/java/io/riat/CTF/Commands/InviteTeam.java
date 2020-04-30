@@ -12,6 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class InviteTeam implements CommandExecutor {
 
     private final ScoreboardManager scoreboardManager;
@@ -31,13 +33,13 @@ public class InviteTeam implements CommandExecutor {
 
             // Check if current player is in a team
             if (team == null) {
-                player.sendMessage("[CTF] You're not in a team?! Create a team first (hint: /createteam <COLOR>");
+                player.sendMessage(CTF_TAG + "You're not in a team?! Create a team first (hint: /createteam <COLOR>");
                 return false;
             }
 
             // Max 3 players on the team.
             if (databaseManager.queryTotalPlayersOnTeam(team) > 3) {
-                player.sendMessage("[CTF] Maximum 3 players on one team!");
+                player.sendMessage(CTF_TAG + "Maximum 3 players on one team!");
                 return false;
             }
 
@@ -50,14 +52,14 @@ public class InviteTeam implements CommandExecutor {
 
             if (!addNewPlayerToTeam(team, newPlayer)) {
                 player.sendMessage(
-                    "[CTF] The player you're trying to invite hasn't connected to the server before or is in a team!"
+                        CTF_TAG + "The player you're trying to invite hasn't connected to the server before or is in a team!"
                 );
 
                 return false;
             }
 
             // Update the invited player team
-            player.sendMessage(String.format("[CTF] %S has now been added to your team!", newPlayer));
+            player.sendMessage(String.format(CTF_TAG + "%S has now been added to your team!", newPlayer));
             scoreboardManager.updatePlayerListName(newPlayer, team);
         }
 

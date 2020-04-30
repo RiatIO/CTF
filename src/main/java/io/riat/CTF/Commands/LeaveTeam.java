@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class LeaveTeam implements CommandExecutor {
 
     private final ScoreboardManager scoreboardManager;
@@ -32,7 +34,7 @@ public class LeaveTeam implements CommandExecutor {
             Integer team = isPlayerInTeam(player);
 
             if (team == null) {
-                player.sendMessage("[CTF] You can't leave a team, if your not in a team!");
+                player.sendMessage(CTF_TAG + "You can't leave a team, if your not in a team!");
                 return false;
             }
 
@@ -51,7 +53,7 @@ public class LeaveTeam implements CommandExecutor {
         if (color == null) return;;
 
         if (removePlayerFromTeam(player.getUniqueId().toString())) {
-            player.sendMessage("[CTF] You have left the " + color + " team, farewell!");
+            player.sendMessage(CTF_TAG + "You have left the " + color + " team, farewell!");
             scoreboardManager.updatePlayerListName(player, "NO TEAM");
             scoreboardManager.updateTeam(player, color, "NO TEAM");
         }
@@ -61,7 +63,7 @@ public class LeaveTeam implements CommandExecutor {
             // Delete the team too
 
             if (databaseManager.deleteTeam(color)) {
-                Bukkit.broadcastMessage("[CTF] Team " + color + " no longer exists!");
+                Bukkit.broadcastMessage(CTF_TAG + "Team " + color + " no longer exists!");
                 scoreboardManager.removeTeam(color);
                 databaseManager.flagRemoved(color);
             }

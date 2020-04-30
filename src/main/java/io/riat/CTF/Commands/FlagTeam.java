@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class FlagTeam implements CommandExecutor  {
 
     private final HashMap<String, Material> banners = Utils.getTeamMaterialMap();
@@ -34,7 +36,7 @@ public class FlagTeam implements CommandExecutor  {
             String team = databaseManager.queryPlayerTeamColor(player);
 
             if (team == null) {
-                player.sendMessage("[CTF] You need to be in a team in order to get a flag.");
+                player.sendMessage(CTF_TAG + "You need to be in a team in order to get a flag.");
                 return false;
             }
 
@@ -43,7 +45,7 @@ public class FlagTeam implements CommandExecutor  {
 
             // Deduct 3 points from the player's team.
             if (databaseManager.updateTeamScore(team, -3)) {
-                player.sendMessage("[CTF] You got flag; however, your team lost 3 points...");
+                player.sendMessage(CTF_TAG + "You got flag; however, your team lost 3 points...");
 
                 scoreboardManager.updateScore(team, -3);
                 return true;

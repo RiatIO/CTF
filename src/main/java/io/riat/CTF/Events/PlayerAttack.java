@@ -15,6 +15,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static io.riat.CTF.Utils.CTF_TAG;
+
 public class PlayerAttack implements Listener {
 
     private final ScoreboardManager scoreboardManager;
@@ -54,7 +56,7 @@ public class PlayerAttack implements Listener {
 
             // Update the team score (check if the player killing has team).
             if (!updateTeamScore(killer, killed)) {
-                killer.sendMessage("[CTF] Your not in a team, or something went wrong...");
+                killer.sendMessage(CTF_TAG + "Your not in a team, or something went wrong...");
             }
         }
     }
@@ -70,12 +72,12 @@ public class PlayerAttack implements Listener {
         String flagLocation = databaseManager.queryFlagPlaced(team);
         if (flagLocation != null) {
             if (databaseManager.updateTeamScore(team, 1)) {
-                killer.sendMessage("[CTF] You just scored a point for your team!");
+                killer.sendMessage(CTF_TAG + "You just scored a point for your team!");
                 scoreboardManager.updateScore(team);
                 return true;
             }
         } else {
-            killer.sendMessage("[CTF] You didn't score any points! Your team hasn't placed their flag, yet...");
+            killer.sendMessage(CTF_TAG + "You didn't score any points! Your team hasn't placed their flag, yet...");
         }
 
         return false;

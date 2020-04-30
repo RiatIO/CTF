@@ -7,6 +7,9 @@ import java.util.HashMap;
 
 public class Utils {
 
+    public static final String CTF_TAG = ChatColor.GOLD + "[CTF] " + ChatColor.RESET;
+
+
     public static HashMap<String, Material> getTeamMaterialMap() {
         HashMap<String, Material> teams = new HashMap<>();
 
