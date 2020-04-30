@@ -372,4 +372,23 @@ public class DatabaseManager {
         Integer team = queryTeamId(color);
         return queryFlagPlaced(team);
     }
+
+    public int queryTotalPlayersOnTeam(int team) {
+        try (Connection c = getConnection(); PreparedStatement statement = c.prepareStatement(
+                "SELECT COUNT(*) AS total FROM users WHERE team = ?"
+        )) {
+            statement.setInt(1, team);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return result.getInt("total");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.getStackTrace();
+        }
+
+        return -1;
+    }
 }

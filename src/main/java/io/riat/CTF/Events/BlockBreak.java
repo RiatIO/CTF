@@ -62,12 +62,9 @@ public class BlockBreak implements Listener {
                 blowTheBase(w, e);
                 e.setDropItems(false);
 
-                // Check if player has their flag placed.
-                if (databaseManager.queryFlagPlaced(playerTeamColor)) {
-                    updateTeamScore(playerTeamColor);
-                } else {
-                    player.sendMessage("[CTF] You didn't score any points! Your team hasn't played their flag, yet...");
-                }
+                // Give the flag killer the flag
+                player.getInventory().addItem(new ItemStack(b.getType()));
+                player.sendMessage("[CTF] Bring back the enemy flag to your own base, and place it to get 5 points!");
 
                 Bukkit.broadcastMessage(String.format("[CTF] Team %s just took down team %s flag!", playerTeamColor, flag));
             }

@@ -75,7 +75,7 @@ public class CTF extends JavaPlugin implements Listener {
         // Register Events
         getServer().getPluginManager().registerEvents(new PlayerJoin(this, databaseManager, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new BlockBreak(databaseManager, scoreboardManager), this);
-        getServer().getPluginManager().registerEvents(new BlockPlace(this, databaseManager), this);
+        getServer().getPluginManager().registerEvents(new BlockPlace(this, databaseManager, scoreboardManager), this);
         getServer().getPluginManager().registerEvents(new CraftItem(), this);
         getServer().getPluginManager().registerEvents(new EntityExplode(), this);
         getServer().getPluginManager().registerEvents(new PlayerAttack(databaseManager, scoreboardManager), this);
@@ -105,6 +105,8 @@ public class CTF extends JavaPlugin implements Listener {
 
         World world = getServer().getWorld("world");
         Location spawn = world.getSpawnLocation();
+
+        System.out.println("To String " + spawn.toString());
 
         spawn.subtract(radius / 2, 0, radius / 2);
 

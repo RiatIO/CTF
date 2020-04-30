@@ -1,6 +1,7 @@
 package io.riat.CTF.Events;
 
 import io.riat.CTF.DatabaseManager;
+import io.riat.CTF.ScoreboardManager;
 import io.riat.CTF.Utils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,16 +25,20 @@ public class BlockPlace implements Listener {
 
     private Plugin plugin;
     private final DatabaseManager databaseManager;
+    private final ScoreboardManager scoreboardManager;
 
-    public BlockPlace(Plugin plugin, DatabaseManager databaseManager) {
+    public BlockPlace(Plugin plugin, DatabaseManager databaseManager, ScoreboardManager scoreboardManager) {
         this.plugin = plugin;
         this.databaseManager = databaseManager;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @EventHandler
     public void onBlockPlaceEvent(final BlockPlaceEvent e) {
         Player player = e.getPlayer();
         Block b = e.getBlock();
+        World world = plugin.getServer().getWorld("world");
+
 
         // Check if there are banners around the block, if it is, dont place it.
         if (isBlockPlacedAroundBanner(b)) {
@@ -44,12 +49,36 @@ public class BlockPlace implements Listener {
         // Check if the placed block is a banner
         if (banners.containsValue(b.getType())) {
 
+            // Check height of the flag (max 200 Y)
+            if (b.getY() > 150) {
+                player.sendMessage("[CTF] Flag has to be placed a bit lower...");
+                e.setCancelled(true);
+                return;
+            }
+
             // Player's cannot place flags which are not their team flag
             String team = getPlayerTeam(player);
 
-            if (team == null || b.getType() != banners.get(team)) {
+            if (team == null) {
                 player.sendMessage("[CTF] You have to be in a team, or have the right team banner to place it out");
                 e.setCancelled(true);
+                return;
+            }
+
+
+            // Check if the team flag is in the area to score points
+            if (b.getType() != banners.get(team)) {
+                if (!isBlockEnemyFlagPlacedInBase(world, b, banners.get(team))) {
+                    player.sendMessage("[CTF] The enemy flag has to be placed next to your own flag!");
+                    e.setCancelled(true);
+                } else {
+                    // Remove the block
+                    b.setType(Material.AIR);
+
+                    // give points
+                    updateTeamScore(team);
+
+                }
                 return;
             }
 
@@ -63,30 +92,23 @@ public class BlockPlace implements Listener {
             // Check the the surrounding blocks is air (like 5x5)
             Location location = b.getLocation();
 
-            for (int y = 1; y < 5; y++) {
-                for (int x = 1; x < 5; x++) {
-                    for (int z = 1; z < 5; z++) {
-                        location.add(x, y, z);
-                        // Check if air
-                        if (location.getBlock().getType() != Material.AIR) {
+            for (int y = 0; y < 5; y++) {
+                for (int x = -4; x < 5; x++) {
+                    for (int z = -4; z < 5; z++) {
+                        Block current = world.getBlockAt(
+                                location.getBlockX() + x,
+                                location.getBlockY() + y,
+                                location.getBlockZ() + z
+                        );
+
+                        if (current.getType() == b.getType()) continue;
+
+                        if (current.getType() != Material.AIR && current.getType() != Material.CAVE_AIR && current.getType() != Material.VOID_AIR) {
+                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air around");
                             e.setCancelled(true);
-
-                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air");
-
                             return;
                         }
-                        location.subtract(x, y, z);
 
-                        location.add(x*-1, y, z*-1);
-                        // Check if air
-                        if (location.getBlock().getType() != Material.AIR) {
-                            e.setCancelled(true);
-
-                            player.sendMessage("[CTF] The flag should be placed with at least 5 blocks of air");
-
-                            return;
-                        }
-                        location.subtract(x*-1, y, z*-1);
                     }
                 }
             }
@@ -120,7 +142,6 @@ public class BlockPlace implements Listener {
         for (int x = -5; x < 5; x++) {
             for (int y = -5; y < 5; y++) {
                 for (int z = -5; z < 5; z++) {
-
                     Block current = world.getBlockAt(
                             location.getBlockX() + x,
                             location.getBlockY() + y,
@@ -136,6 +157,38 @@ public class BlockPlace implements Listener {
 
 
         return false;
+    }
+
+    private boolean isBlockEnemyFlagPlacedInBase(World world, Block b, Material flag) {
+
+        Location location = b.getLocation();
+
+        boolean isFlagFound = false;
+
+        for (int x = -5; x < 5; x++) {
+            for (int y = -5; y < 5; y++) {
+                for (int z = -5; z < 5; z++) {
+                    Block current = world.getBlockAt(
+                            location.getBlockX() + x,
+                            location.getBlockY() + y,
+                            location.getBlockZ() + z
+                    );
+
+                    if (current.getType() == flag) {
+                        isFlagFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return isFlagFound;
+    }
+
+    public void updateTeamScore(String color) {
+        if (databaseManager.updateTeamScore(color, 5)) {
+            scoreboardManager.updateScore(color, 5);
+        }
     }
 
 }

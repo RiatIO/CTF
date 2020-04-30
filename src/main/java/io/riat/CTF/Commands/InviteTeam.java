@@ -35,6 +35,12 @@ public class InviteTeam implements CommandExecutor {
                 return false;
             }
 
+            // Max 3 players on the team.
+            if (databaseManager.queryTotalPlayersOnTeam(team) > 3) {
+                player.sendMessage("[CTF] Maximum 3 players on one team!");
+                return false;
+            }
+
             // Check if invited player is on the server (if not error)
             if (strings.length == 0) {
                 return false;
