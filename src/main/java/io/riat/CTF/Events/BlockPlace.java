@@ -39,7 +39,6 @@ public class BlockPlace implements Listener {
         Block b = e.getBlock();
         World world = plugin.getServer().getWorld("world");
 
-
         // Check if there are banners around the block, if it is, dont place it.
         if (isBlockPlacedAroundBanner(b)) {
             player.sendMessage("[CTF] You cannot place a block around the flag!");
@@ -76,17 +75,34 @@ public class BlockPlace implements Listener {
                     b.setType(Material.AIR);
 
                     // give points
-                    updateTeamScore(team);
-
+                    updateTeamScore(team, 5);
                 }
                 return;
             }
 
             // Check if team has placed a flag
-            if (databaseManager.queryFlagPlaced(team)) {
-                player.sendMessage("[CTF] You can only place one flag at the time!");
-                e.setCancelled(true);
-                return;
+            String flagLocation = databaseManager.queryFlagPlaced(team);
+
+            if (flagLocation != null) {
+                // Remove the placed flag.
+                databaseManager.flagRemoved(team);
+
+                // Remove the flag from the world
+                String[] locationDeserialization = flagLocation.split(":");
+                String flagWorld = locationDeserialization[0];
+                double flagX = Double.parseDouble(locationDeserialization[1]);
+                double flagY = Double.parseDouble(locationDeserialization[2]);
+                double flagZ = Double.parseDouble(locationDeserialization[3]);
+
+                Location flag = new Location(
+                        plugin.getServer().getWorld(flagWorld),
+                        flagX,
+                        flagY,
+                        flagZ
+                );
+                flag.getBlock().setType(Material.AIR);
+
+                updateTeamScore(team, -2);
             }
 
             // Check the the surrounding blocks is air (like 5x5)
@@ -113,7 +129,7 @@ public class BlockPlace implements Listener {
                 }
             }
 
-            databaseManager.flagPlaced(player);
+            databaseManager.flagPlaced(player, b.getLocation());
         }
 
 
@@ -185,9 +201,9 @@ public class BlockPlace implements Listener {
         return isFlagFound;
     }
 
-    public void updateTeamScore(String color) {
-        if (databaseManager.updateTeamScore(color, 5)) {
-            scoreboardManager.updateScore(color, 5);
+    public void updateTeamScore(String color, int points) {
+        if (databaseManager.updateTeamScore(color, points)) {
+            scoreboardManager.updateScore(color, points);
         }
     }
 

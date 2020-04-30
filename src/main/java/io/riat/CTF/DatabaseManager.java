@@ -1,5 +1,6 @@
 package io.riat.CTF;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.sql.*;
@@ -314,14 +315,24 @@ public class DatabaseManager {
         return db.getConnection();
     }
 
-    public boolean flagPlaced(Player player) {
+    public boolean flagPlaced(Player player, Location location) {
+
+        String locationSerialization = location.getWorld().getName() +
+                ":" +
+                location.getBlockX() +
+                ":" +
+                location.getBlockY() +
+                ":" +
+                location.getBlockZ();
+
         Integer team = queryPlayerTeam(player);
         if (team != null) {
             try (Connection c = db.getConnection(); PreparedStatement statement = c.prepareStatement(
-                    "INSERT INTO flags (teamid, timestamp) VALUES (?, ?)"
+                    "INSERT INTO flags (teamid, timestamp, location) VALUES (?, ?, ?)"
             )) {
                 statement.setInt(1, team);
                 statement.setLong(2, System.currentTimeMillis());
+                statement.setString(3, locationSerialization);
 
                 return statement.executeUpdate() > 0;
 
@@ -351,24 +362,26 @@ public class DatabaseManager {
         return false;
     }
 
-    public boolean queryFlagPlaced(Integer team) {
-        if (team == null) return false;
+    public String queryFlagPlaced(Integer team) {
+        if (team == null) return null;
 
         try (Connection c = getConnection(); PreparedStatement statement = c.prepareStatement(
                 "SELECT * FROM flags WHERE teamid = ?"
         )) {
             statement.setInt(1, team);
             try (ResultSet result = statement.executeQuery()) {
-                return result.next();
+                if (result.next()) {
+                    return result.getString("location");
+                }
             }
         } catch (SQLException e) {
             e.getStackTrace();
         }
 
-        return false;
+        return null;
     }
 
-    public boolean queryFlagPlaced(String color) {
+    public String queryFlagPlaced(String color) {
         Integer team = queryTeamId(color);
         return queryFlagPlaced(team);
     }

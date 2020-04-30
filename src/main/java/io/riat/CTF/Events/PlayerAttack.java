@@ -67,14 +67,15 @@ public class PlayerAttack implements Listener {
             return false;
         }
 
-        if (databaseManager.queryFlagPlaced(team)) {
+        String flagLocation = databaseManager.queryFlagPlaced(team);
+        if (flagLocation != null) {
             if (databaseManager.updateTeamScore(team, 1)) {
                 killer.sendMessage("[CTF] You just scored a point for your team!");
                 scoreboardManager.updateScore(team);
                 return true;
             }
         } else {
-            killer.sendMessage("[CTF] You didn't score any points! Your team hasn't played their flag, yet...");
+            killer.sendMessage("[CTF] You didn't score any points! Your team hasn't placed their flag, yet...");
         }
 
         return false;

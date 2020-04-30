@@ -55,6 +55,13 @@ public class BlockBreak implements Listener {
                 return;
             }
 
+            String flagLocation = databaseManager.queryFlagPlaced(playerTeamColor);
+            if (flagLocation == null) {
+                player.sendMessage("[CTF] You can't do that. Your team hasn't placed their flag, yet...");
+                e.setCancelled(true);
+                return;
+            }
+
             String flag = b.getType().toString().split("_")[0];
 
             // If the banner is not the same team color as the player, blow the base
